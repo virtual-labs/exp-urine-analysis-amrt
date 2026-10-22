@@ -4,97 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Urine Analysis & Clinical Biochemistry</title>
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Plotly.js -->
-  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #e2e8f0;
-      background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-      background-size: 20px 20px;
+      background-color: #cbd5e1;
+      user-select: none;
     }
     .mono { font-family: 'JetBrains Mono', monospace; }
 
-    /* Physical Instrument Bezel & LCD Styling */
-    .instrument-chassis {
-      background: linear-gradient(145deg, #f8fafc, #e2e8f0);
-      border: 2px solid #cbd5e1;
-      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    }
-    .lcd-screen {
-      background-color: #091410;
-      border: 2px inset #334155;
-      color: #34d399;
-      text-shadow: 0 0 6px rgba(52, 211, 153, 0.35);
+    /* Interactive Bench Canvas Cursor */
+    #lab-bench-canvas {
+      cursor: default;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.25);
     }
 
-    /* Guided Procedure Step Styling */
-    .step-item { cursor: pointer; }
-    .step-item.active-step {
-      border-color: #a4123f;
-      background-color: #fff1f2;
-      box-shadow: 0 4px 12px rgba(164, 18, 63, 0.12);
+    @keyframes pulse-border {
+      0%, 100% { border-color: #a4123f; box-shadow: 0 0 0 0 rgba(164, 18, 63, 0.4); }
+      50% { border-color: #e11d48; box-shadow: 0 0 0 5px rgba(164, 18, 63, 0); }
     }
-    .step-item.completed-step .step-badge {
-      background-color: #059669;
-      color: #ffffff;
-    }
-
-    /* Active Control Highlight */
-    @keyframes pulse-spotlight {
-      0%, 100% {
-        box-shadow: 0 0 0 0 rgba(164, 18, 63, 0.5), 0 0 12px rgba(164, 18, 63, 0.2);
-        border-color: #a4123f;
-      }
-      50% {
-        box-shadow: 0 0 0 5px rgba(164, 18, 63, 0), 0 0 20px rgba(164, 18, 63, 0.4);
-        border-color: #e11d48;
-      }
-    }
-    .control-spotlight {
-      animation: pulse-spotlight 1.8s infinite;
-      background-color: #fff1f2 !important;
-      border-width: 2px !important;
-      border-color: #a4123f !important;
-    }
-
-    @keyframes bounce-horizontal {
-      0%, 100% { transform: translateX(0); }
-      50% { transform: translateX(-4px); }
-    }
-    .guide-pill { animation: bounce-horizontal 1.2s infinite; }
-
-    .bench-canvas {
-      cursor: pointer;
-      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
-    }
-
-    .sed-pill.active {
-      background-color: #a4123f;
-      color: #ffffff;
-      border-color: #a4123f;
-    }
-
-    .pad-row.selected-pad {
-      background-color: #fff1f2;
-      border-left: 4px solid #a4123f;
-    }
-
-    @media print {
-      .no-print { display: none !important; }
-      body { background: #ffffff; }
+    .instruction-glow {
+      animation: pulse-border 2s infinite;
     }
   </style>
 </head>
-<body class="text-slate-800 min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col text-slate-800">
 
-  <!-- Top Bar: Exact Attached Amrita Logo Only -->
-  <header class="bg-white border-b border-slate-300 px-6 py-3 shadow-xs">
+  <!-- Top Bar: Solely the Amrita Logo on the Top Left -->
+  <header class="bg-white border-b border-slate-300 px-6 py-2.5 shadow-xs">
     <div class="max-w-7xl mx-auto flex items-center justify-start">
       <img 
         id="amrita-brand-logo"
@@ -103,7 +42,7 @@
         style="max-height: 68px; width: auto; height: auto; display: block;"
         onerror="handleLogoFallback(this)"
       >
-      <label id="logo-file-picker" class="hidden no-print cursor-pointer inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-dashed border-[#a4123f] bg-rose-50/60 hover:bg-rose-100/70 text-[#a4123f] text-xs font-semibold transition">
+      <label id="logo-file-picker" class="hidden cursor-pointer inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-dashed border-[#a4123f] bg-rose-50 hover:bg-rose-100 text-[#a4123f] text-xs font-semibold transition">
         <i data-lucide="image-plus" class="w-4 h-4"></i>
         <span>Select "logo-branding-amrita-universiy-2024 (1).jpg" to embed exact logo</span>
         <input type="file" accept="image/*" class="hidden" onchange="embedExactLogo(event)">
@@ -111,477 +50,199 @@
     </div>
   </header>
 
-  <!-- Main Clinical Wet-Lab Bench Workspace -->
-  <main class="max-w-7xl mx-auto px-4 py-5 flex-grow w-full space-y-5">
+  <!-- Main Virtual Lab Benchtop Container -->
+  <main class="max-w-7xl mx-auto px-4 py-4 flex-grow w-full space-y-4">
 
-    <!-- 4-Step Lab Protocol Bar -->
-    <section class="bg-white rounded-xl shadow-sm border border-slate-300 p-4 no-print">
-      <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-100">
-        <div class="flex items-center gap-2">
-          <i data-lucide="clipboard-list" class="w-4 h-4 text-[#a4123f]"></i>
-          <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
-            Laboratory Protocol Steps
-          </h2>
-        </div>
-        <div class="flex items-center gap-2">
-          <span id="procedure-progress-text" class="text-xs font-semibold text-[#a4123f] bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200">
-            Step 1 of 4
-          </span>
-          <button onclick="resetSimulator()" class="text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-full border border-slate-300 transition flex items-center gap-1 cursor-pointer">
-            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Bench
-          </button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <!-- Step 1 -->
-        <div onclick="focusControlSection(1)" id="proc-step-1" class="step-item active-step p-3 rounded-lg border border-slate-200 transition-all">
-          <div class="flex items-center justify-between mb-1">
-            <div class="flex items-center gap-2">
-              <span class="step-badge w-5 h-5 rounded-full bg-[#a4123f] text-white text-xs font-bold flex items-center justify-center shrink-0">1</span>
-              <span class="text-xs font-bold text-slate-900">Load Urine Tube</span>
-            </div>
+    <!-- Top Instruction & Sample Selector Bar (Classic VLab Style) -->
+    <div class="bg-white rounded-xl border-2 border-[#a4123f] p-3.5 shadow-sm flex flex-wrap items-center justify-between gap-3 instruction-glow">
+      <div class="flex items-center gap-3">
+        <span id="step-number-circle" class="w-8 h-8 rounded-full bg-[#a4123f] text-white font-bold text-sm flex items-center justify-center shrink-0 shadow">
+          1
+        </span>
+        <div>
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[#a4123f]" id="step-header-tag">
+            STEP 1 OF 6 • SAMPLE PREPARATION
           </div>
-          <p class="text-[11px] text-slate-600 leading-snug">
-            Select a patient specimen tube from the rack to observe physical colour and clarity.
-          </p>
-        </div>
-
-        <!-- Step 2 -->
-        <div onclick="focusControlSection(2)" id="proc-step-2" class="step-item p-3 rounded-lg border border-slate-200 bg-slate-50/70 transition-all">
-          <div class="flex items-center justify-between mb-1">
-            <div class="flex items-center gap-2">
-              <span class="step-badge w-5 h-5 rounded-full bg-slate-700 text-white text-xs font-bold flex items-center justify-center shrink-0">2</span>
-              <span class="text-xs font-bold text-slate-900">Set Assay Conditions</span>
-            </div>
-          </div>
-          <p class="text-[11px] text-slate-600 leading-snug">
-            Set sample temperature, reaction timer, and preservation state before dipping.
-          </p>
-        </div>
-
-        <!-- Step 3 -->
-        <div onclick="focusControlSection(3)" id="proc-step-3" class="step-item p-3 rounded-lg border border-slate-200 bg-slate-50/70 transition-all">
-          <div class="flex items-center justify-between mb-1">
-            <div class="flex items-center gap-2">
-              <span class="step-badge w-5 h-5 rounded-full bg-slate-700 text-white text-xs font-bold flex items-center justify-center shrink-0">3</span>
-              <span class="text-xs font-bold text-slate-900">Dip Strip &amp; Examine</span>
-            </div>
-          </div>
-          <p class="text-[11px] text-slate-600 leading-snug">
-            Immerse the 10-pad reagent strip into the urine tube and examine the wet-mount slide.
-          </p>
-        </div>
-
-        <!-- Step 4 -->
-        <div onclick="focusControlSection(4)" id="proc-step-4" class="step-item p-3 rounded-lg border border-slate-200 bg-slate-50/70 transition-all">
-          <div class="flex items-center justify-between mb-1">
-            <div class="flex items-center gap-2">
-              <span class="step-badge w-5 h-5 rounded-full bg-slate-700 text-white text-xs font-bold flex items-center justify-center shrink-0">4</span>
-              <span class="text-xs font-bold text-slate-900">Refractometry &amp; Log</span>
-            </div>
-          </div>
-          <p class="text-[11px] text-slate-600 leading-snug">
-            Compute temperature-corrected Specific Gravity and review the recorded lab log.
+          <p id="instruction-banner-text" class="text-sm font-semibold text-slate-900">
+            Select a patient specimen from the dropdown (or click the Urine Bottle on the shelf) to pour 15 mL into the graduated test tube.
           </p>
         </div>
       </div>
-    </section>
 
-    <!-- Main Wet-Lab Bench Grid -->
-    <div class="grid lg:grid-cols-12 gap-5">
-
-      <!-- ==================== LEFT COLUMN: SPECIMEN RACK & ASSAY SETUP (4 cols) ==================== -->
-      <div class="lg:col-span-4 space-y-5 no-print">
-
-        <div class="instrument-chassis rounded-2xl overflow-hidden">
-          <!-- Clean Instrument Faceplate Header -->
-          <div class="bg-slate-800 px-5 py-3 text-white flex items-center justify-between border-b border-slate-700">
-            <div class="flex items-center gap-2">
-              <i data-lucide="test-tubes" class="w-4 h-4 text-amber-400"></i>
-              <h3 class="font-bold text-sm tracking-wide">Specimen Rack &amp; Assay Setup</h3>
-            </div>
-            <span id="analyzer-status" class="mono text-[11px] px-2.5 py-0.5 rounded bg-amber-400 text-slate-950 font-bold">
-              STANDBY
-            </span>
-          </div>
-
-          <div class="p-4 space-y-4">
-
-            <!-- BOX 1: Patient Urine Specimen Selection -->
-            <div id="control-box-1" class="control-spotlight p-3.5 rounded-xl border border-slate-300 bg-white transition-all relative">
-              <div class="flex items-center justify-between mb-2">
-                <label for="sample-select" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-900 cursor-pointer">
-                  <span class="w-5 h-5 rounded-full bg-[#a4123f] text-white text-xs flex items-center justify-center font-bold">1</span>
-                  Patient Urine Tube
-                </label>
-                <span id="guide-badge-1" class="guide-pill text-[10px] font-bold bg-[#a4123f] text-white px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
-                  <i data-lucide="hand" class="w-3 h-3"></i> SELECT TUBE
-                </span>
-              </div>
-
-              <select id="sample-select" onchange="onSampleSelected()" class="w-full rounded-lg border-2 border-slate-300 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-900 focus:outline-none focus:border-[#a4123f] cursor-pointer">
-                <option value="normal">Tube A: Healthy Control (M, 26y)</option>
-                <option value="dka">Tube B: Diabetic Ketoacidosis (F, 19y)</option>
-                <option value="nephrotic">Tube C: Nephrotic Syndrome (M, 52y)</option>
-                <option value="uti">Tube D: Acute Bacterial UTI (F, 31y)</option>
-                <option value="jaundice">Tube E: Obstructive Jaundice (M, 48y)</option>
-                <option value="calculi">Tube F: Renal Calculi / Stone (M, 39y)</option>
-              </select>
-              <p id="sample-clinical-note" class="text-xs text-slate-600 mt-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 leading-relaxed"></p>
-            </div>
-
-            <!-- BOX 2: Bench Conditions -->
-            <div id="control-box-2" class="p-3.5 rounded-xl border border-slate-300 bg-white space-y-3 transition-all relative">
-              <div class="flex items-center justify-between">
-                <label class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-900">
-                  <span class="w-5 h-5 rounded-full bg-slate-800 text-white text-xs flex items-center justify-center font-bold">2</span>
-                  Bench Conditions
-                </label>
-                <span id="guide-badge-2" class="hidden guide-pill text-[10px] font-bold bg-[#a4123f] text-white px-2 py-0.5 rounded-full shadow-xs items-center gap-1">
-                  SET PARAMETERS
-                </span>
-              </div>
-
-              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="font-semibold text-slate-800">Urine Temperature:</span>
-                  <span id="temp-val" class="mono font-bold text-[#a4123f]">20 &deg;C (20&deg;C Ref)</span>
-                </div>
-                <input id="specimen-temp" type="range" min="14" max="38" step="3" value="20" oninput="onHardwareChanged()" class="w-full accent-[#a4123f] cursor-pointer">
-              </div>
-
-              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="font-semibold text-slate-800">Incubation Timer:</span>
-                  <span id="time-val" class="mono font-bold text-[#a4123f]">60 sec (Standard)</span>
-                </div>
-                <input id="read-time" type="range" min="15" max="180" step="15" value="60" oninput="onHardwareChanged()" class="w-full accent-[#a4123f] cursor-pointer">
-              </div>
-
-              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <label for="storage-state" class="block text-xs font-semibold text-slate-800 mb-1">Sample Preservation:</label>
-                <select id="storage-state" onchange="onHardwareChanged()" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800 cursor-pointer">
-                  <option value="fresh">Fresh Clean-Catch (&lt;1 hr)</option>
-                  <option value="unpreserved">Unpreserved Room Temp (&gt;4 hrs)</option>
-                </select>
-              </div>
-
-              <button onclick="proceedToStep3()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-                <i data-lucide="check" class="w-3.5 h-3.5"></i> Confirm Bench Settings
-              </button>
-            </div>
-
-            <!-- BOX 3: Dip & Read Action -->
-            <div id="control-box-3" class="p-3.5 rounded-xl border border-slate-300 bg-white space-y-2.5 transition-all relative">
-              <div class="flex items-center justify-between">
-                <label class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-900">
-                  <span class="w-5 h-5 rounded-full bg-slate-800 text-white text-xs flex items-center justify-center font-bold">3</span>
-                  Reagent Strip Procedure
-                </label>
-                <span id="guide-badge-3" class="hidden guide-pill text-[10px] font-bold bg-emerald-700 text-white px-2 py-0.5 rounded-full shadow-xs items-center gap-1">
-                  CLICK TO DIP
-                </span>
-              </div>
-
-              <button id="dip-btn" onclick="triggerDipstickAnimation()" class="w-full bg-[#a4123f] hover:bg-[#830e32] text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-sm cursor-pointer">
-                <i data-lucide="droplet" class="w-5 h-5"></i> Dip Reagent Strip in Urine
-              </button>
-
-              <div class="grid grid-cols-2 gap-2 pt-1">
-                <button onclick="standardizeAssay()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 border border-slate-300 cursor-pointer">
-                  <i data-lucide="Sliders" class="w-3.5 h-3.5 text-slate-700"></i> Standardize (20&deg;C)
-                </button>
-                <button onclick="resetSimulator()" class="bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-[#a4123f] font-semibold py-2 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 border border-slate-300 cursor-pointer">
-                  <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-[#a4123f]"></i> Reset Bench
-                </button>
-              </div>
-
-              <button onclick="downloadResultsCSV()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 px-4 rounded-lg shadow-xs transition flex items-center justify-center gap-2 text-xs cursor-pointer">
-                <i data-lucide="download" class="w-4 h-4"></i> Export Lab Log (CSV)
-              </button>
-            </div>
-
-          </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-300">
+          <label for="specimen-select" class="text-xs font-bold text-slate-700">Specimen:</label>
+          <select id="specimen-select" onchange="changeSpecimen()" class="bg-white border border-slate-300 rounded px-2 py-1 text-xs font-bold text-slate-900 cursor-pointer focus:outline-none focus:border-[#a4123f]">
+            <option value="normal">Sample A: Normal Healthy Control</option>
+            <option value="dka">Sample B: Diabetic Ketoacidosis (DKA)</option>
+            <option value="nephrotic">Sample C: Nephrotic Syndrome (Proteinuria)</option>
+            <option value="uti">Sample D: Acute Bacterial UTI</option>
+            <option value="jaundice">Sample E: Obstructive Jaundice</option>
+            <option value="calculi">Sample F: Renal Calculi (Hematuria)</option>
+          </select>
         </div>
 
-        <!-- Physical Examination & Optical Refractometer LCD Readout -->
-        <div class="instrument-chassis p-4 rounded-2xl space-y-3">
-          <div class="flex items-center justify-between border-b border-slate-300 pb-2">
-            <span class="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
-              <i data-lucide="eye" class="w-4 h-4 text-slate-700"></i> Physical &amp; Refractometer Readout
-            </span>
-            <span class="mono text-[10px] text-slate-500">Clinical Refractometer</span>
-          </div>
-          <div class="grid grid-cols-2 gap-2.5 text-xs">
-            <div class="p-2.5 rounded-lg bg-white border border-slate-300">
-              <span class="text-[10px] uppercase text-slate-400 font-semibold block">Urine Colour</span>
-              <span id="phys-color" class="font-bold text-slate-900">Pale Straw Yellow</span>
-            </div>
-            <div class="p-2.5 rounded-lg bg-white border border-slate-300">
-              <span class="text-[10px] uppercase text-slate-400 font-semibold block">Clarity</span>
-              <span id="phys-clarity" class="font-bold text-slate-900">Clear</span>
-            </div>
-            <div class="p-2.5 rounded-lg lcd-screen">
-              <span class="text-[10px] uppercase text-emerald-400/70 font-semibold block">Refractometer SG</span>
-              <span id="phys-raw-sg" class="mono font-bold text-amber-300 text-base">1.015</span>
-            </div>
-            <div class="p-2.5 rounded-lg lcd-screen">
-              <span class="text-[10px] uppercase text-emerald-400/70 font-semibold block">Corrected SG (20&deg;C)</span>
-              <span id="phys-corr-sg" class="mono font-bold text-emerald-400 text-base">1.015</span>
-            </div>
-          </div>
-        </div>
+        <button onclick="openOcularModal('chart')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-xs">
+          <i data-lucide="palette" class="w-3.5 h-3.5"></i> Color Chart
+        </button>
+
+        <button onclick="resetLabBench()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-xs">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Experiment
+        </button>
       </div>
+    </div>
 
-      <!-- ==================== RIGHT COLUMN: WET-LAB WORKBENCH & MICROSCOPY (8 cols) ==================== -->
-      <div class="lg:col-span-8 space-y-5">
+    <!-- ==================== INTERACTIVE 2D PHYSICAL LABORATORY BENCHTOP CANVAS ==================== -->
+    <div class="relative w-full overflow-hidden rounded-2xl border-2 border-slate-400 bg-slate-900">
+      <canvas id="lab-bench-canvas" width="1150" height="540" class="w-full h-auto block"></canvas>
 
-        <!-- 1. Wet-Lab Dipstick Workbench & Color Comparator Chart -->
-        <div class="instrument-chassis p-4 rounded-2xl space-y-3">
-          <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-300 pb-2.5">
+      <!-- Floating Tooltip when Hovering Over Any Apparatus on the Bench -->
+      <div id="apparatus-tooltip" class="hidden pointer-events-none absolute bg-slate-900/95 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-amber-400 shadow-lg z-20"></div>
+
+      <!-- ==================== POPUP OCULAR VIEWER MODAL (MICROSCOPE / REFRACTOMETER / COLOR COMPARATOR) ==================== -->
+      <div id="ocular-modal" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-4 z-30">
+        <div class="bg-white rounded-2xl max-w-3xl w-full p-5 shadow-2xl border-2 border-slate-300 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-3">
             <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">
-                Urine Dipstick Worktable &amp; Colorimetric Reference Chart
-              </h3>
+              <i data-lucide="eye" class="w-5 h-5 text-[#a4123f]"></i>
+              <h3 id="modal-title" class="font-bold text-slate-900 text-base">Ocular Eyepiece View</h3>
             </div>
-            <div class="flex items-center gap-2">
-              <span id="stage-status-pill" class="mono text-[11px] bg-slate-800 text-emerald-400 px-2.5 py-0.5 rounded border border-slate-700">
-                Ready to Dip
-              </span>
-              <span id="reaction-timer-badge" class="mono text-[11px] bg-slate-900 text-amber-300 px-2.5 py-0.5 rounded border border-slate-700">
-                Timer: 00.0s
-              </span>
-            </div>
-          </div>
-
-          <!-- Realistic Wet-Lab Dipstick & Bottle Color Chart Canvas -->
-          <div class="relative">
-            <canvas 
-              id="dipstick-canvas" 
-              width="760" 
-              height="280" 
-              class="w-full rounded-xl bg-slate-900 border-2 border-slate-400 bench-canvas"
-            ></canvas>
-            <div id="pad-hover-tooltip" class="hidden pointer-events-none absolute top-3 right-3 bg-slate-900/95 text-emerald-300 text-xs mono px-3 py-1.5 rounded-lg border border-slate-600 shadow-lg"></div>
-          </div>
-
-          <!-- Pad Reaction Details Bar -->
-          <div class="flex flex-wrap items-center justify-between gap-2 bg-white px-3.5 py-2 rounded-lg border border-slate-300 text-xs">
-            <div id="pad-inspector-banner" class="text-slate-700 leading-snug">
-              <strong>Reagent Pad Details:</strong> Click on the urine tube to dip the strip, or click any of the 10 reagent pads to compare against the bottle reference blocks.
-            </div>
-            <button onclick="triggerDipstickAnimation()" class="shrink-0 bg-slate-800 hover:bg-slate-900 text-white font-semibold px-3 py-1 rounded text-[11px] transition flex items-center gap-1 cursor-pointer">
-              <i data-lucide="rotate-cw" class="w-3 h-3"></i> Dip New Strip
+            <button onclick="closeOcularModal()" class="bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-[#a4123f] px-3 py-1 rounded-lg text-xs font-bold cursor-pointer">
+              &times; Close View
             </button>
           </div>
-        </div>
 
-        <!-- 2. Wet-Mount Urine Sediment Microscope (400x HPF) -->
-        <div class="instrument-chassis p-4 rounded-2xl space-y-2.5">
-          <div class="flex flex-wrap justify-between items-center gap-1 border-b border-slate-300 pb-2">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-              <i data-lucide="microscope" class="w-4 h-4 text-slate-700"></i>
-              Wet-Mount Urine Sediment Microscopy (400x HPF)
-            </span>
-            <span id="sediment-summary-tag" class="mono text-[11px] bg-white text-slate-800 px-2.5 py-0.5 rounded border border-slate-300 font-semibold">
-              0–2 RBC/HPF • Rare Hyaline Cast
-            </span>
-          </div>
-
-          <!-- Microscope Stage Filter & Objective Controls -->
-          <div class="flex flex-wrap items-center justify-between gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-300 text-[11px]">
-            <div class="flex items-center gap-1">
-              <span class="text-slate-500 font-semibold mr-1">Field Filter:</span>
-              <button onclick="setSedimentFilter('all')" id="sed-all" class="sed-pill active px-2.5 py-0.5 rounded border border-slate-300 text-slate-700 transition cursor-pointer">All</button>
-              <button onclick="setSedimentFilter('cells')" id="sed-cells" class="sed-pill px-2.5 py-0.5 rounded border border-slate-300 text-slate-700 transition cursor-pointer">RBC / WBC</button>
-              <button onclick="setSedimentFilter('casts')" id="sed-casts" class="sed-pill px-2.5 py-0.5 rounded border border-slate-300 text-slate-700 transition cursor-pointer">Casts</button>
-              <button onclick="setSedimentFilter('crystals')" id="sed-crystals" class="sed-pill px-2.5 py-0.5 rounded border border-slate-300 text-slate-700 transition cursor-pointer">Crystals / Bacteria</button>
+          <!-- Microscope & Refractometer Interactive Viewport -->
+          <div id="modal-body-content" class="grid md:grid-cols-12 gap-4 items-center">
+            <div class="md:col-span-7 flex flex-col items-center justify-center bg-slate-950 p-4 rounded-xl border border-slate-800 relative">
+              <canvas id="ocular-canvas" width="380" height="270" class="rounded-lg cursor-crosshair"></canvas>
             </div>
-            <div class="flex items-center gap-1.5">
-              <span class="text-slate-500 font-semibold">Objective:</span>
-              <button onclick="adjustSedimentZoom(-0.25)" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-bold cursor-pointer">&minus;</button>
-              <span id="sed-zoom-label" class="mono text-[11px] text-slate-900 font-bold w-12 text-center">400x</span>
-              <button onclick="adjustSedimentZoom(0.25)" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-bold cursor-pointer">&plus;</button>
-            </div>
-          </div>
 
-          <!-- Microscope Viewport Canvas -->
-          <div class="relative">
-            <canvas 
-              id="sediment-canvas" 
-              width="720" 
-              height="200" 
-              class="w-full rounded-xl bg-slate-950 border-2 border-slate-400 bench-canvas"
-            ></canvas>
-            <div id="sediment-hover-pill" class="hidden pointer-events-none absolute top-2 right-2 bg-slate-900/95 text-amber-300 text-[10px] mono px-2.5 py-1 rounded border border-amber-700 shadow"></div>
-          </div>
+            <div class="md:col-span-5 space-y-3 text-xs">
+              <!-- Fine Focus Knob Control (for Microscope) -->
+              <div id="focus-knob-panel" class="p-3 rounded-xl bg-slate-100 border border-slate-300 space-y-1.5">
+                <div class="flex justify-between font-bold text-slate-800">
+                  <span>Microscope Fine Focus Knob:</span>
+                  <span id="focus-status-label" class="mono text-[#a4123f]">Blurry (Adjust!)</span>
+                </div>
+                <input id="focus-slider" type="range" min="0" max="100" value="18" oninput="updateMicroscopeFocus()" class="w-full accent-[#a4123f] cursor-pointer">
+                <p class="text-[11px] text-slate-500">Slide the fine adjustment knob towards <strong>50</strong> to bring the urinary sediment into sharp 400x optical focus.</p>
+              </div>
 
-          <!-- Microscope Finding Readout -->
-          <div class="bg-white border border-slate-300 p-2.5 rounded-lg text-xs text-slate-700 flex items-start gap-2">
-            <i data-lucide="crosshair" class="w-4 h-4 text-[#a4123f] shrink-0 mt-0.5"></i>
-            <div class="leading-snug">
-              <span class="font-bold text-slate-900">Microscopic Identification:</span>
-              <span id="sediment-inspector-text">Click any cell, cast, crystal, or bacterium in the microscope field above to identify its structure.</span>
+              <!-- Finding Description Box -->
+              <div class="p-3.5 rounded-xl bg-rose-50/70 border border-rose-200 space-y-1.5">
+                <div class="font-bold text-[#a4123f] uppercase text-[11px]" id="modal-finding-header">Clinical Observation</div>
+                <p id="modal-finding-text" class="text-slate-700 leading-relaxed"></p>
+              </div>
+
+              <!-- Quick Switcher Between Instruments -->
+              <div class="grid grid-cols-3 gap-1.5 pt-1">
+                <button onclick="openOcularModal('microscope')" class="bg-slate-800 hover:bg-slate-900 text-white py-2 px-2 rounded-lg font-semibold text-[11px] cursor-pointer">
+                  400x Microscope
+                </button>
+                <button onclick="openOcularModal('refractometer')" class="bg-slate-800 hover:bg-slate-900 text-white py-2 px-2 rounded-lg font-semibold text-[11px] cursor-pointer">
+                  SG Refractometer
+                </button>
+                <button onclick="openOcularModal('chart')" class="bg-amber-600 hover:bg-amber-700 text-white py-2 px-2 rounded-lg font-semibold text-[11px] cursor-pointer">
+                  10-Pad Chart
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
-        <!-- 10-Parameter Chemical Urinalysis Lab Report Sheet -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-300">
-          <div class="flex flex-wrap justify-between items-center gap-2 mb-3 border-b border-slate-200 pb-3">
-            <div>
-              <h3 class="font-bold text-slate-900 text-base">Chemical Dipstick &amp; Biochemistry Lab Report</h3>
-              <p id="flag-banner" class="text-xs text-emerald-700 font-medium mt-0.5">
-                Specimen loaded on rack. Click "Dip Reagent Strip in Urine" to record colorimetric readings.
-              </p>
-            </div>
-            <div class="flex items-center gap-2">
-              <span id="diagnostic-impression" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-300">
-                Normal Urinalysis Profile
-              </span>
-              <button onclick="downloadCurrentReportTXT()" class="no-print text-xs font-semibold text-[#a4123f] bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 transition flex items-center gap-1 cursor-pointer">
-                <i data-lucide="file-down" class="w-3.5 h-3.5"></i> Download Report
+    <!-- ==================== BOTTOM LAB NOTEBOOK & RECORDED RESULTS TABLE ==================== -->
+    <div class="grid lg:grid-cols-12 gap-4">
+      <!-- Current Specimen 10-Pad Biochemical Readout Sheet (7 cols) -->
+      <div class="lg:col-span-7 bg-white rounded-xl shadow-sm border border-slate-300 p-4 space-y-3">
+        <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-200 pb-2.5">
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4 text-[#a4123f]"></i>
+              10-Pad Dipstick &amp; Physical Urinalysis Worksheet
+            </h3>
+            <p id="worksheet-subtext" class="text-xs text-slate-500">
+              Complete Step 4 (60s Stopwatch Incubation) on the bench above to populate chemical pad readings.
+            </p>
+          </div>
+          <span id="clinical-diagnosis-badge" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300">
+            Awaiting Assay...
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                <th class="p-2">Pad</th>
+                <th class="p-2">Biochemical Marker</th>
+                <th class="p-2">Developed Colour</th>
+                <th class="p-2">Observed Result</th>
+                <th class="p-2">Reference Range</th>
+              </tr>
+            </thead>
+            <tbody id="dipstick-worksheet-body" class="divide-y divide-slate-100 mono">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Auto-Recorded Observation Logbook & Export (5 cols) -->
+      <div class="lg:col-span-5 bg-white rounded-xl shadow-sm border border-slate-300 p-4 flex flex-col justify-between space-y-3">
+        <div class="space-y-2">
+          <div class="flex justify-between items-center border-b border-slate-200 pb-2.5">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+              <i data-lucide="book-check" class="w-4 h-4 text-emerald-700"></i>
+              Recorded Observation Logbook
+            </h3>
+            <div class="flex gap-1.5">
+              <button onclick="downloadCSV()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer shadow-2xs">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download CSV
+              </button>
+              <button onclick="downloadReportTXT()" class="bg-rose-50 hover:bg-rose-100 text-[#a4123f] border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer">
+                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Report
               </button>
             </div>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-xs md:text-sm text-left border-collapse">
+          <div class="overflow-x-auto max-h-56">
+            <table class="w-full text-[11px] text-left border-collapse">
               <thead>
                 <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
-                  <th class="py-2 px-3">Pad # &amp; Analyte</th>
-                  <th class="py-2 px-3">Pad Colour</th>
-                  <th class="py-2 px-3">Result</th>
-                  <th class="py-2 px-3">Flag</th>
-                  <th class="py-2 px-3">Reference Interval</th>
-                  <th class="py-2 px-3">Biochemical Reaction</th>
+                  <th class="p-1.5">#</th>
+                  <th class="p-1.5">Sample</th>
+                  <th class="p-1.5">SG</th>
+                  <th class="p-1.5">pH</th>
+                  <th class="p-1.5">GLU</th>
+                  <th class="p-1.5">PRO</th>
+                  <th class="p-1.5">KET</th>
+                  <th class="p-1.5">Microscopy</th>
                 </tr>
               </thead>
-              <tbody id="urinalysis-table-body" class="divide-y divide-slate-100 mono">
-                <!-- Populated dynamically via JS -->
+              <tbody id="logbook-tbody" class="divide-y divide-slate-100 mono">
+                <tr>
+                  <td colspan="8" class="p-4 text-center text-slate-400 font-sans">
+                    Perform the benchtop steps above; each completed specimen assay is automatically logged here.
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
 
-      </div>
-    </div>
-
-    <!-- Spectrophotometric Reflectance & Crystal Solubility Plots -->
-    <div class="grid md:grid-cols-2 gap-5">
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-300 space-y-2">
-        <div class="flex justify-between items-center">
-          <div>
-            <h4 class="font-bold text-sm text-slate-800">Optical Chromogen Intensity by Reagent Pad</h4>
-            <span class="text-[11px] text-slate-500 mono">525–660 nm Reflectance Photometry</span>
-          </div>
-        </div>
-        <div id="biochem-bar-plot" class="w-full h-56"></div>
-        <div id="biochem-plot-insight" class="text-xs bg-slate-50 p-2 rounded-lg border border-slate-200 text-slate-700">
-          Click any bar on the graph to highlight the corresponding reagent pad and chemical reaction.
-        </div>
-      </div>
-
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-300 space-y-2">
-        <div class="flex justify-between items-center">
-          <div>
-            <h4 class="font-bold text-sm text-slate-800">Urine pH vs. Specific Gravity &amp; Crystal Precipitation</h4>
-            <span class="text-[11px] text-slate-500 mono">Urinary Ionic Saturation Map</span>
-          </div>
-        </div>
-        <div id="ph-sg-plot" class="w-full h-56"></div>
-        <div id="ph-plot-insight" class="text-xs bg-slate-50 p-2 rounded-lg border border-slate-200 text-slate-700">
-          Acidic urine (pH &lt; 6.0) precipitates Uric Acid &amp; Ca Oxalate; alkaline urine (pH &gt; 7.5) precipitates Struvite.
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 4 Section: Refractometer SG Verification + Auto-Recorded Observation Log -->
-    <div id="step-4-panel" class="grid md:grid-cols-12 gap-5 transition-all">
-      <!-- Refractometer Temperature Correction Calculator -->
-      <div id="control-box-4" class="md:col-span-5 bg-white p-5 rounded-2xl shadow-sm border border-slate-300 space-y-3 no-print transition-all">
-        <div class="flex items-center justify-between">
-          <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-            <i data-lucide="calculator" class="w-4 h-4 text-[#a4123f]"></i> Refractometer Temperature Correction
-          </h3>
-          <span id="guide-badge-4" class="hidden guide-pill text-[10px] font-bold bg-[#a4123f] text-white px-2 py-0.5 rounded-full shadow-xs items-center gap-1">
-            VERIFY SG
-          </span>
-        </div>
-        <p class="text-xs text-slate-600 leading-relaxed">
-          Refractometers are calibrated at <strong>20&deg;C</strong>. Add <strong>0.001</strong> per <strong>3&deg;C above 20&deg;C</strong> (or subtract 0.001 per 3&deg;C below 20&deg;C):
-          <span class="mono text-[11px] block bg-slate-100 p-1.5 rounded mt-1">
-            SG_corr = SG_raw + ((Temp - 20) / 3) &times; 0.001
-          </span>
-        </p>
-        <div class="grid grid-cols-2 gap-3 pt-1">
-          <div>
-            <label class="block text-xs font-medium text-slate-700 mb-1">Corrected SG:</label>
-            <input id="calc-sg" type="number" step="0.001" placeholder="e.g. 1.015" class="w-full rounded border border-slate-300 px-2.5 py-1.5 text-sm mono">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-700 mb-1">Est. Osmolality (mOsm/kg):</label>
-            <input id="calc-osm" type="number" step="10" placeholder="Last 2 SG digits × 35" class="w-full rounded border border-slate-300 px-2.5 py-1.5 text-sm mono">
-          </div>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="verifyUrinalysisCalc()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition cursor-pointer">
-            Check Calculation
-          </button>
-          <button onclick="autoFillUrinalysisCalc()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium px-3 py-2 rounded-lg border border-slate-300 transition cursor-pointer">
-            Show Solution
-          </button>
-        </div>
-        <div id="calc-feedback" class="text-xs font-medium hidden p-2.5 rounded-lg"></div>
-      </div>
-
-      <!-- Automatically Populated Lab Logbook Table -->
-      <div class="md:col-span-7 bg-white p-5 rounded-2xl shadow-sm border border-slate-300 space-y-3">
-        <div class="flex flex-wrap justify-between items-center gap-2">
-          <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-            <i data-lucide="book-open-check" class="w-4 h-4 text-[#a4123f]"></i> Laboratory Observation Logbook
-          </h3>
-          <div class="flex items-center gap-2">
-            <span id="log-count-badge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-              Ready to Record
-            </span>
-            <button onclick="downloadResultsCSV()" class="no-print text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 px-3 py-1 rounded-lg transition flex items-center gap-1 shadow-sm cursor-pointer">
-              <i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV
-            </button>
-          </div>
-        </div>
-        <div class="overflow-x-auto max-h-48">
-          <table class="w-full text-xs text-left border-collapse">
-            <thead>
-              <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
-                <th class="p-2">#</th>
-                <th class="p-2">Specimen</th>
-                <th class="p-2">Colour</th>
-                <th class="p-2">SG (Corr)</th>
-                <th class="p-2">pH</th>
-                <th class="p-2">Glucose</th>
-                <th class="p-2">Protein</th>
-                <th class="p-2">Ketones</th>
-                <th class="p-2">NIT / LEU</th>
-              </tr>
-            </thead>
-            <tbody id="observation-log-body" class="divide-y divide-slate-100 mono">
-              <tr>
-                <td colspan="9" class="p-4 text-center text-slate-400 font-sans">
-                  Dip the reagent strip in Step 3 to automatically record your experimental observations here.
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] text-slate-600 flex items-center justify-between">
+          <span><strong>Tip:</strong> Switch samples in the top bar to compare multiple pathologies.</span>
+          <span id="log-counter" class="mono font-bold text-[#a4123f]">0 Logged</span>
         </div>
       </div>
     </div>
 
   </main>
 
-  <!-- ==================== SIMULATOR JAVASCRIPT ==================== -->
+  <!-- ==================== SIMULATION ENGINE JAVASCRIPT ==================== -->
   <script>
     lucide.createIcons();
 
@@ -604,7 +265,6 @@
           return;
         }
       } catch (e) {}
-
       logoAttemptIndex++;
       if (logoAttemptIndex < LOGO_CANDIDATES.length) {
         imgEl.src = LOGO_CANDIDATES[logoAttemptIndex];
@@ -624,476 +284,294 @@
         imgEl.src = dataUrl;
         imgEl.style.display = 'block';
         document.getElementById('logo-file-picker').classList.add('hidden');
-        try {
-          localStorage.setItem('amrita_exact_logo_base64', dataUrl);
-        } catch (err) {}
+        try { localStorage.setItem('amrita_exact_logo_base64', dataUrl); } catch (err) {}
       };
       reader.readAsDataURL(file);
     }
 
     // ==================== CLINICAL URINE SPECIMENS DATABASE ====================
-    const URINE_SAMPLES = {
+    const SPECIMENS = {
       normal: {
-        idCode: "URN-101",
-        name: "Healthy Normal Control",
-        clinicalNote: "Routine midstream clean-catch specimen (26yo male). Normal glomerular filtration and tubular reabsorption.",
-        colorName: "Pale Straw Yellow",
-        liquidTopColor: "#fef08a",
-        liquidBotColor: "#ca8a04",
-        turbidity: 0.04,
-        clarityName: "Clear",
-        foamColor: null,
-        rawSG: 1.015,
+        code: "URN-101",
+        name: "Normal Healthy Control",
+        colorLabel: "Pale Straw Yellow, Clear",
+        liquidColor: "#fde047",
+        liquidDeep: "#eab308",
+        turbidity: 0.03,
+        foam: false,
+        sg: 1.015,
         ph: 6.0,
-        glucose: { label: "Negative", mgdl: 0, color: "#7dd3fc", severity: 5 },
-        protein: { label: "Negative", mgdl: 0, color: "#bef264", severity: 5 },
-        ketones: { label: "Negative", mgdl: 0, color: "#fed7aa", severity: 5 },
-        bilirubin: { label: "Negative", mgdl: 0, color: "#fef3c7", severity: 5 },
-        urobilinogen: { label: "Normal (0.2 mg/dL)", mgdl: 0.2, color: "#fde68a", severity: 10 },
-        blood: { label: "Negative", rbc: 0, color: "#fde047", severity: 5 },
-        nitrite: { label: "Negative", pos: false, color: "#fef9c3", severity: 5 },
-        leukocytes: { label: "Negative", wbc: 0, color: "#fef3c7", severity: 5 },
-        sedimentTag: "0–1 RBC/HPF • Rare Squamous Epithelial Cell",
-        impression: "Normal Physiological Urinalysis",
-        sedimentConfig: { rbc: 2, wbc: 2, bacteria: 0, casts: 1, castType: 'hyaline', crystals: 2, crystalType: 'oxalate' }
+        diagnosis: "Normal Physiological Urinalysis",
+        microscopyText: "0–1 RBC/HPF, occasional flat squamous epithelial cell, no casts or pathological crystals.",
+        sediment: { rbc: 2, wbc: 2, casts: 1, castType: 'hyaline', crystals: 2, crystalType: 'oxalate', bacteria: 0 },
+        pads: [
+          { code: "LEU", name: "Leukocytes", val: "Negative", color: "#fef3c7", ref: "Negative" },
+          { code: "NIT", name: "Nitrite", val: "Negative", color: "#fef9c3", ref: "Negative" },
+          { code: "URO", name: "Urobilinogen", val: "0.2 mg/dL (Norm)", color: "#fde68a", ref: "0.2–1.0 mg/dL" },
+          { code: "PRO", name: "Protein", val: "Negative", color: "#bef264", ref: "Negative" },
+          { code: "PH",  name: "pH", val: "6.0", color: "#eab308", ref: "4.5–8.0" },
+          { code: "BLD", name: "Blood", val: "Negative", color: "#fde047", ref: "Negative" },
+          { code: "SG",  name: "Specific Gravity", val: "1.015", color: "#0f766e", ref: "1.005–1.030" },
+          { code: "KET", name: "Ketones", val: "Negative", color: "#fed7aa", ref: "Negative" },
+          { code: "BIL", name: "Bilirubin", val: "Negative", color: "#fef3c7", ref: "Negative" },
+          { code: "GLU", name: "Glucose", val: "Negative", color: "#7dd3fc", ref: "Negative" }
+        ]
       },
       dka: {
-        idCode: "URN-204",
+        code: "URN-204",
         name: "Diabetic Ketoacidosis (DKA)",
-        clinicalNote: "19yo female with Type 1 Diabetes, polyuria, and fruity breath odor. Serum glucose exceeds the 180 mg/dL renal transport maximum.",
-        colorName: "Pale Yellow",
-        liquidTopColor: "#fef9c3",
-        liquidBotColor: "#eab308",
+        colorLabel: "Pale Yellow, High SG",
+        liquidColor: "#fef08a",
+        liquidDeep: "#ca8a04",
         turbidity: 0.08,
-        clarityName: "Clear (High Solute SG)",
-        foamColor: null,
-        rawSG: 1.032,
+        foam: false,
+        sg: 1.032,
         ph: 5.0,
-        glucose: { label: "4+ (2000 mg/dL)", mgdl: 2000, color: "#78350f", severity: 98 },
-        protein: { label: "Trace (15 mg/dL)", mgdl: 15, color: "#a3e635", severity: 25 },
-        ketones: { label: "3+ Large (80 mg/dL)", mgdl: 80, color: "#581c87", severity: 95 },
-        bilirubin: { label: "Negative", mgdl: 0, color: "#fef3c7", severity: 5 },
-        urobilinogen: { label: "Normal (0.2 mg/dL)", mgdl: 0.2, color: "#fde68a", severity: 10 },
-        blood: { label: "Negative", rbc: 0, color: "#fde047", severity: 5 },
-        nitrite: { label: "Negative", pos: false, color: "#fef9c3", severity: 5 },
-        leukocytes: { label: "Negative", wbc: 0, color: "#fef3c7", severity: 5 },
-        sedimentTag: "Acidic pH • Uric Acid Diamonds • Hyaline Casts",
-        impression: "Severe Glucosuria & Ketonuria (Diabetic Ketoacidosis)",
-        sedimentConfig: { rbc: 2, wbc: 3, bacteria: 0, casts: 3, castType: 'hyaline', crystals: 12, crystalType: 'uric' }
+        diagnosis: "Severe Glucosuria (4+) & Ketonuria (3+) — Diabetic Ketoacidosis",
+        microscopyText: "Acidic urine (pH 5.0) containing characteristic amber diamond-shaped Uric Acid crystals and hyaline casts.",
+        sediment: { rbc: 2, wbc: 3, casts: 3, castType: 'hyaline', crystals: 14, crystalType: 'uric', bacteria: 0 },
+        pads: [
+          { code: "LEU", name: "Leukocytes", val: "Negative", color: "#fef3c7", ref: "Negative" },
+          { code: "NIT", name: "Nitrite", val: "Negative", color: "#fef9c3", ref: "Negative" },
+          { code: "URO", name: "Urobilinogen", val: "0.2 mg/dL", color: "#fde68a", ref: "0.2–1.0 mg/dL" },
+          { code: "PRO", name: "Protein", val: "Trace (15 mg/dL)", color: "#a3e635", ref: "Negative" },
+          { code: "PH",  name: "pH", val: "5.0 (Acidic)", color: "#f97316", ref: "4.5–8.0" },
+          { code: "BLD", name: "Blood", val: "Negative", color: "#fde047", ref: "Negative" },
+          { code: "SG",  name: "Specific Gravity", val: "1.032 (High)", color: "#ca8a04", ref: "1.005–1.030" },
+          { code: "KET", name: "Ketones", val: "3+ Large (80 mg/dL)", color: "#581c87", ref: "Negative" },
+          { code: "BIL", name: "Bilirubin", val: "Negative", color: "#fef3c7", ref: "Negative" },
+          { code: "GLU", name: "Glucose", val: "4+ (2000 mg/dL)", color: "#78350f", ref: "Negative" }
+        ]
       },
       nephrotic: {
-        idCode: "URN-309",
+        code: "URN-309",
         name: "Nephrotic Syndrome",
-        clinicalNote: "52yo male with generalised pitting edema and frothy urine. Glomerular basement membrane charge-barrier loss causes heavy albuminuria.",
-        colorName: "Dark Amber (Frothy)",
-        liquidTopColor: "#f59e0b",
-        liquidBotColor: "#92400e",
-        turbidity: 0.28,
-        clarityName: "Slightly Cloudy",
-        foamColor: "rgba(255, 255, 255, 0.92)",
-        rawSG: 1.028,
+        colorLabel: "Dark Amber, Frothy Foam",
+        liquidColor: "#f59e0b",
+        liquidDeep: "#92400e",
+        turbidity: 0.30,
+        foam: "#ffffff",
+        sg: 1.028,
         ph: 6.0,
-        glucose: { label: "Negative", mgdl: 0, color: "#7dd3fc", severity: 5 },
-        protein: { label: "4+ (>2000 mg/dL)", mgdl: 2000, color: "#0f766e", severity: 98 },
-        ketones: { label: "Negative", mgdl: 0, color: "#fed7aa", severity: 5 },
-        bilirubin: { label: "Negative", mgdl: 0, color: "#fef3c7", severity: 5 },
-        urobilinogen: { label: "Normal (0.2 mg/dL)", mgdl: 0.2, color: "#fde68a", severity: 10 },
-        blood: { label: "1+ Small (25 RBC/µL)", rbc: 25, color: "#65a30d", severity: 45 },
-        nitrite: { label: "Negative", pos: false, color: "#fef9c3", severity: 5 },
-        leukocytes: { label: "Trace", wbc: 15, color: "#e9d5ff", severity: 25 },
-        sedimentTag: "Granular & Fatty Casts • Oval Fat Bodies",
-        impression: "Nephrotic-Range Proteinuria with Cylindruria",
-        sedimentConfig: { rbc: 8, wbc: 5, bacteria: 0, casts: 9, castType: 'granular', crystals: 3, crystalType: 'oxalate' }
+        diagnosis: "Nephrotic-Range Proteinuria (4+) with Granular/Fatty Casts",
+        microscopyText: "Abundant coarse granular casts, fatty casts with refractile lipid droplets, and occasional erythrocytes.",
+        sediment: { rbc: 7, wbc: 4, casts: 9, castType: 'granular', crystals: 3, crystalType: 'oxalate', bacteria: 0 },
+        pads: [
+          { code: "LEU", name: "Leukocytes", val: "Trace", color: "#e9d5ff", ref: "Negative" },
+          { code: "NIT", name: "Nitrite", val: "Negative", color: "#fef9c3", ref: "Negative" },
+          { code: "URO", name: "Urobilinogen", val: "0.2 mg/dL", color: "#fde68a", ref: "0.2–1.0 mg/dL" },
+          { code: "PRO", name: "Protein", val: "4+ (>2000 mg/dL)", color: "#0f766e", ref: "Negative" },
+          { code: "PH",  name: "pH", val: "6.0", color: "#eab308", ref: "4.5–8.0" },
+          { code: "BLD", name: "Blood", val: "1+ (25 RBC/µL)", color: "#65a30d", ref: "Negative" },
+          { code: "SG",  name: "Specific Gravity", val: "1.028", color: "#a16207", ref: "1.005–1.030" },
+          { code: "KET", name: "Ketones", val: "Negative", color: "#fed7aa", ref: "Negative" },
+          { code: "BIL", name: "Bilirubin", val: "Negative", color: "#fef3c7", ref: "Negative" },
+          { code: "GLU", name: "Glucose", val: "Negative", color: "#7dd3fc", ref: "Negative" }
+        ]
       },
       uti: {
-        idCode: "URN-412",
+        code: "URN-412",
         name: "Acute Bacterial Cystitis (UTI)",
-        clinicalNote: "31yo female with dysuria and turbid urine. Gram-negative uropathogenic E. coli reduces nitrates to nitrites and triggers neutrophil influx.",
-        colorName: "Cloudy Amber",
-        liquidTopColor: "#fde047",
-        liquidBotColor: "#a16207",
-        turbidity: 0.65,
-        clarityName: "Turbid / Cloudy",
-        foamColor: null,
-        rawSG: 1.020,
-        ph: 7.5,
-        glucose: { label: "Negative", mgdl: 0, color: "#7dd3fc", severity: 5 },
-        protein: { label: "1+ (30 mg/dL)", mgdl: 30, color: "#4ade80", severity: 40 },
-        ketones: { label: "Negative", mgdl: 0, color: "#fed7aa", severity: 5 },
-        bilirubin: { label: "Negative", mgdl: 0, color: "#fef3c7", severity: 5 },
-        urobilinogen: { label: "Normal (0.2 mg/dL)", mgdl: 0.2, color: "#fde68a", severity: 10 },
-        blood: { label: "2+ Moderate (80 RBC/µL)", rbc: 80, color: "#15803d", severity: 65 },
-        nitrite: { label: "Positive (Pink)", pos: true, color: "#f43f5e", severity: 92 },
-        leukocytes: { label: "3+ Large (500 WBC/µL)", wbc: 500, color: "#6b21a8", severity: 96 },
-        sedimentTag: ">50 WBC/HPF • Motile Bacilli • Struvite Crystals",
-        impression: "Acute Bacterial Urinary Tract Infection (Pyuria + Nitrituria)",
-        sedimentConfig: { rbc: 12, wbc: 34, bacteria: 45, casts: 2, castType: 'wbc', crystals: 8, crystalType: 'struvite' }
+        colorLabel: "Cloudy Turbid Amber",
+        liquidColor: "#eab308",
+        liquidDeep: "#854d0e",
+        turbidity: 0.72,
+        foam: false,
+        sg: 1.020,
+        ph: 8.0,
+        diagnosis: "Acute Bacterial UTI (Nitrite POS + Leukocyte Esterase 3+)",
+        microscopyText: "Numerous segmented neutrophils (>50 WBC/HPF, pyuria), motile rod bacilli, and alkaline Struvite 'coffin-lid' crystals.",
+        sediment: { rbc: 12, wbc: 36, casts: 3, castType: 'wbc', crystals: 10, crystalType: 'struvite', bacteria: 45 },
+        pads: [
+          { code: "LEU", name: "Leukocytes", val: "3+ (500 WBC/µL)", color: "#6b21a8", ref: "Negative" },
+          { code: "NIT", name: "Nitrite", val: "Positive (Pink)", color: "#f43f5e", ref: "Negative" },
+          { code: "URO", name: "Urobilinogen", val: "0.2 mg/dL", color: "#fde68a", ref: "0.2–1.0 mg/dL" },
+          { code: "PRO", name: "Protein", val: "1+ (30 mg/dL)", color: "#4ade80", ref: "Negative" },
+          { code: "PH",  name: "pH", val: "8.0 (Alkaline)", color: "#0d9488", ref: "4.5–8.0" },
+          { code: "BLD", name: "Blood", val: "2+ (80 RBC/µL)", color: "#15803d", ref: "Negative" },
+          { code: "SG",  name: "Specific Gravity", val: "1.020", color: "#0f766e", ref: "1.005–1.030" },
+          { code: "KET", name: "Ketones", val: "Negative", color: "#fed7aa", ref: "Negative" },
+          { code: "BIL", name: "Bilirubin", val: "Negative", color: "#fef3c7", ref: "Negative" },
+          { code: "GLU", name: "Glucose", val: "Negative", color: "#7dd3fc", ref: "Negative" }
+        ]
       },
       jaundice: {
-        idCode: "URN-518",
+        code: "URN-518",
         name: "Obstructive Jaundice",
-        clinicalNote: "48yo male with scleral icterus and dark tea-colored urine producing yellow surface foam. Water-soluble conjugated bilirubin spills into urine.",
-        colorName: "Dark Tea / Mahogany",
-        liquidTopColor: "#b45309",
-        liquidBotColor: "#451a03",
-        turbidity: 0.18,
-        clarityName: "Hazy Brown",
-        foamColor: "rgba(250, 204, 21, 0.90)",
-        rawSG: 1.024,
+        colorLabel: "Dark Tea Brown, Yellow Foam",
+        liquidColor: "#b45309",
+        liquidDeep: "#451a03",
+        turbidity: 0.22,
+        foam: "#facc15",
+        sg: 1.024,
         ph: 5.5,
-        glucose: { label: "Negative", mgdl: 0, color: "#7dd3fc", severity: 5 },
-        protein: { label: "Trace (15 mg/dL)", mgdl: 15, color: "#a3e635", severity: 25 },
-        ketones: { label: "Negative", mgdl: 0, color: "#fed7aa", severity: 5 },
-        bilirubin: { label: "3+ Large (6.0 mg/dL)", mgdl: 6.0, color: "#9333ea", severity: 96 },
-        urobilinogen: { label: "Low / Absent (0.1 mg/dL)", mgdl: 0.1, color: "#fef3c7", severity: 15 },
-        blood: { label: "Negative", rbc: 0, color: "#fde047", severity: 5 },
-        nitrite: { label: "Negative", pos: false, color: "#fef9c3", severity: 5 },
-        leukocytes: { label: "Negative", wbc: 0, color: "#fef3c7", severity: 5 },
-        sedimentTag: "Bilirubin-Stained Granular Casts",
-        impression: "Conjugated Hyperbilirubinuria (Biliary Obstruction)",
-        sedimentConfig: { rbc: 3, wbc: 4, bacteria: 0, casts: 5, castType: 'bilirubin', crystals: 4, crystalType: 'uric' }
+        diagnosis: "Conjugated Hyperbilirubinuria (3+) — Hepatobiliary Obstruction",
+        microscopyText: "Golden-brown bilirubin-stained granular casts and tubular epithelial cells.",
+        sediment: { rbc: 3, wbc: 4, casts: 6, castType: 'bilirubin', crystals: 4, crystalType: 'uric', bacteria: 0 },
+        pads: [
+          { code: "LEU", name: "Leukocytes", val: "Negative", color: "#fef3c7", ref: "Negative" },
+          { code: "NIT", name: "Nitrite", val: "Negative", color: "#fef9c3", ref: "Negative" },
+          { code: "URO", name: "Urobilinogen", val: "Low / Absent", color: "#fef3c7", ref: "0.2–1.0 mg/dL" },
+          { code: "PRO", name: "Protein", val: "Trace", color: "#a3e635", ref: "Negative" },
+          { code: "PH",  name: "pH", val: "5.5", color: "#f97316", ref: "4.5–8.0" },
+          { code: "BLD", name: "Blood", val: "Negative", color: "#fde047", ref: "Negative" },
+          { code: "SG",  name: "Specific Gravity", val: "1.024", color: "#65a30d", ref: "1.005–1.030" },
+          { code: "KET", name: "Ketones", val: "Negative", color: "#fed7aa", ref: "Negative" },
+          { code: "BIL", name: "Bilirubin", val: "3+ Large (6 mg/dL)", color: "#9333ea", ref: "Negative" },
+          { code: "GLU", name: "Glucose", val: "Negative", color: "#7dd3fc", ref: "Negative" }
+        ]
       },
       calculi: {
-        idCode: "URN-625",
-        name: "Urolithiasis / Renal Calculi",
-        clinicalNote: "39yo male with acute flank colic and smoky red hematuria. Ureteral stone abrasion releases intact erythrocytes and calcium oxalate crystals.",
-        colorName: "Smoky Rose / Red",
-        liquidTopColor: "#f43f5e",
-        liquidBotColor: "#881337",
-        turbidity: 0.42,
-        clarityName: "Cloudy Red",
-        foamColor: null,
-        rawSG: 1.026,
+        code: "URN-625",
+        name: "Renal Calculi (Urolithiasis)",
+        colorLabel: "Smoky Rose-Red (Hematuria)",
+        liquidColor: "#f43f5e",
+        liquidDeep: "#881337",
+        turbidity: 0.45,
+        foam: false,
+        sg: 1.026,
         ph: 5.5,
-        glucose: { label: "Negative", mgdl: 0, color: "#7dd3fc", severity: 5 },
-        protein: { label: "1+ (30 mg/dL)", mgdl: 30, color: "#4ade80", severity: 40 },
-        ketones: { label: "Negative", mgdl: 0, color: "#fed7aa", severity: 5 },
-        bilirubin: { label: "Negative", mgdl: 0, color: "#fef3c7", severity: 5 },
-        urobilinogen: { label: "Normal (0.2 mg/dL)", mgdl: 0.2, color: "#fde68a", severity: 10 },
-        blood: { label: "3+ Large (>200 RBC/µL)", rbc: 250, color: "#064e3b", severity: 98 },
-        nitrite: { label: "Negative", pos: false, color: "#fef9c3", severity: 5 },
-        leukocytes: { label: "1+ Small (70 WBC/µL)", wbc: 70, color: "#c084fc", severity: 45 },
-        sedimentTag: ">40 RBC/HPF • Calcium Oxalate Envelopes",
-        impression: "Gross Hematuria & Calcium Oxalate Crystalluria",
-        sedimentConfig: { rbc: 42, wbc: 8, bacteria: 0, casts: 2, castType: 'rbc', crystals: 16, crystalType: 'oxalate' }
+        diagnosis: "Gross Hematuria (3+) & Calcium Oxalate Crystalluria",
+        microscopyText: "Abundant intact erythrocytes (>40 RBC/HPF) and characteristic octahedron 'envelope' Calcium Oxalate crystals.",
+        sediment: { rbc: 42, wbc: 8, casts: 2, castType: 'rbc', crystals: 18, crystalType: 'oxalate', bacteria: 0 },
+        pads: [
+          { code: "LEU", name: "Leukocytes", val: "1+ (70 WBC/µL)", color: "#c084fc", ref: "Negative" },
+          { code: "NIT", name: "Nitrite", val: "Negative", color: "#fef9c3", ref: "Negative" },
+          { code: "URO", name: "Urobilinogen", val: "0.2 mg/dL", color: "#fde68a", ref: "0.2–1.0 mg/dL" },
+          { code: "PRO", name: "Protein", val: "1+ (30 mg/dL)", color: "#4ade80", ref: "Negative" },
+          { code: "PH",  name: "pH", val: "5.5", color: "#f97316", ref: "4.5–8.0" },
+          { code: "BLD", name: "Blood", val: "3+ (>200 RBC/µL)", color: "#064e3b", ref: "Negative" },
+          { code: "SG",  name: "Specific Gravity", val: "1.026", color: "#65a30d", ref: "1.005–1.030" },
+          { code: "KET", name: "Ketones", val: "Negative", color: "#fed7aa", ref: "Negative" },
+          { code: "BIL", name: "Bilirubin", val: "Negative", color: "#fef3c7", ref: "Negative" },
+          { code: "GLU", name: "Glucose", val: "Negative", color: "#7dd3fc", ref: "Negative" }
+        ]
       }
     };
 
-    const DRY_PAD_COLORS = [
-      "#7dd3fc", "#fed7aa", "#fde047", "#eab308", "#bef264",
-      "#fef9c3", "#fef3c7", "#fde68a", "#fef3c7", "#fef3c7"
+    const DRY_COLORS = [
+      "#fef3c7", "#fef9c3", "#fde68a", "#bef264", "#eab308",
+      "#fde047", "#1e3a8a", "#fed7aa", "#fef3c7", "#7dd3fc"
     ];
 
-    const REFERENCE_SWATCHES = [
-      ["#7dd3fc", "#86efac", "#ca8a04", "#78350f"], // GLU
-      ["#fed7aa", "#f9a8d4", "#c084fc", "#581c87"], // KET
-      ["#fde047", "#a3e635", "#15803d", "#064e3b"], // BLD
-      ["#f97316", "#eab308", "#84cc16", "#0d9488"], // PH
-      ["#bef264", "#4ade80", "#14b8a6", "#0f766e"], // PRO
-      ["#fef9c3", "#fce7f3", "#fb7185", "#f43f5e"], // NIT
-      ["#fef3c7", "#e9d5ff", "#a855f7", "#6b21a8"], // LEU
-      ["#fef3c7", "#fde68a", "#d8b4fe", "#9333ea"], // BIL
-      ["#fde68a", "#fca5a5", "#f87171", "#dc2626"], // URO
-      ["#1e3a8a", "#0f766e", "#65a30d", "#ca8a04"]  // SG
-    ];
+    // ==================== INTERACTIVE LAB BENCH STATE MACHINE ====================
+    let labState = {
+      step: 1, // 1: Pour Urine, 2: Take Strip, 3: Dip & Blot Strip, 4: Run Timer, 5: Pipette Slide/Refractometer, 6: Inspect Microscope
+      animBusy: false,
+      specimenKey: 'normal',
 
-    let currentComputedResult = null;
-    let observationLog = [];
-    let selectedPadIndex = 0;
-    let hoveredPadIndex = -1;
+      // Urine Bottle & Graduated Tube State
+      bottleX: 110, bottleY: 75, bottleAngle: 0,
+      pouringStream: false,
+      tubeFillLevel: 0, // 0.0 to 1.0 (15 mL)
 
-    // Wet-Lab Dipstick & Comparator Animation State
-    let dipAnimState = {
-      phase: 'standby', // 'standby', 'plunging', 'soaking', 'withdrawing', 'transferring', 'scanning', 'complete'
-      armX: 115,
-      armY: 16,
-      soakTicks: 0,
-      laserY: 28,
-      padProgress: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      waveAmplitude: 1.5,
-      drips: [],
-      bubbles: []
+      // Reagent Strip & Bottle Cap State
+      capOpen: false,
+      stripVisible: false,
+      stripX: 430, stripY: 165, stripAngle: 0, // Moves to tube (x:248), dips, blots on tissue (x:340), rests on mat (x:525, y:395, horizontal)
+      stripHorizontal: false,
+      colorDevProgress: 0, // 0.0 to 1.0
+
+      // Stopwatch State
+      timerSec: 0,
+      timerRunning: false,
+
+      // Pasteur Pipette State
+      pipetteX: 735, pipetteY: 225,
+      pipetteFilled: false,
+      slideLoaded: false,
+
+      // Microscope & Ocular Modal State
+      activeModalMode: 'microscope',
+      microscopeFocus: 18, // Optimal is 50
+      sedimentItems: [],
+      logbook: []
     };
 
-    let sedimentParticles = [];
-    let sedimentFilter = 'all';
-    let sedimentZoom = 1.0;
-    let selectedSedimentItem = null;
-    let hoveredSedimentItem = null;
-
-    // ==================== STRICT SEQUENTIAL STEP PROGRESSION ====================
-    function advanceProcedureStep(stepNumber) {
-      for (let i = 1; i <= 4; i++) {
-        const el = document.getElementById(`proc-step-${i}`);
-        const badge = el.querySelector('.step-badge');
-        el.classList.remove('active-step');
-        if (i < stepNumber) {
-          el.classList.add('completed-step');
-          badge.innerHTML = '&check;';
-        } else if (i === stepNumber) {
-          el.classList.remove('completed-step');
-          el.classList.add('active-step');
-          badge.textContent = i;
-        } else {
-          el.classList.remove('completed-step');
-          badge.textContent = i;
-        }
+    const STEP_INSTRUCTIONS = {
+      1: {
+        tag: "STEP 1 OF 6 • POUR URINE SPECIMEN",
+        text: "Click on the Patient Urine Specimen Bottle on the top-left shelf to pour 15 mL of urine into the graduated conical test tube.",
+        pointer: { x: 140, y: 65, label: "CLICK URINE BOTTLE" }
+      },
+      2: {
+        tag: "STEP 2 OF 6 • EXTRACT REAGENT STRIP",
+        text: "Click on the Dipstick Reagent Bottle on the bench to open the desiccant cap and withdraw a fresh 10-pad reagent strip.",
+        pointer: { x: 430, y: 205, label: "CLICK STRIP BOTTLE" }
+      },
+      3: {
+        tag: "STEP 3 OF 6 • IMMERSE & BLOT STRIP",
+        text: "Click on the Reagent Strip to dip it briefly into the urine tube, blot the edge on the absorbent tissue, and lay it on the reading mat.",
+        pointer: { x: 430, y: 125, label: "CLICK REAGENT STRIP" }
+      },
+      4: {
+        tag: "STEP 4 OF 6 • INCUBATE 60 SECONDS",
+        text: "Click on the Digital Stopwatch to start the 60-second enzymatic reaction timer and observe the 10 pads develop color.",
+        pointer: { x: 645, y: 245, label: "CLICK STOPWATCH" }
+      },
+      5: {
+        tag: "STEP 5 OF 6 • PIPETTE TO REFRACTOMETER & SLIDE",
+        text: "Click on the Glass Pasteur Pipette to transfer a drop of urine onto the Optical Refractometer prism and Microscope glass slide.",
+        pointer: { x: 745, y: 195, label: "CLICK PIPETTE" }
+      },
+      6: {
+        tag: "STEP 6 OF 6 • EXAMINE MICROSCOPY & REFRACTOMETRY",
+        text: "Click on the Binocular Microscope (or Optical Refractometer) to inspect the 400x urinary sediment and Specific Gravity scale!",
+        pointer: { x: 965, y: 155, label: "CLICK MICROSCOPE" }
       }
-      document.getElementById('procedure-progress-text').textContent = 
-        stepNumber <= 4 ? `Step ${stepNumber} of 4` : `Protocol Complete`;
+    };
 
-      for (let b = 1; b <= 4; b++) {
-        const box = document.getElementById(`control-box-${b}`);
-        const guideBadge = document.getElementById(`guide-badge-${b}`);
-        if (box) box.classList.remove('control-spotlight');
-        if (guideBadge) {
-          guideBadge.classList.add('hidden');
-          guideBadge.classList.remove('flex');
-        }
-      }
+    // Hitboxes for Bench Apparatus
+    const HITBOXES = [
+      { id: 'bottle', x: 85, y: 55, w: 110, h: 145, name: "Patient Urine Specimen Bottle", reqStep: 1 },
+      { id: 'tube', x: 215, y: 195, w: 80, h: 225, name: "15 mL Graduated Centrifuge Tube", reqStep: 3 },
+      { id: 'stripBottle', x: 380, y: 225, w: 100, h: 190, name: "10-Parameter Dipstick Container (Compare Color Chart)", reqStep: 2 },
+      { id: 'floatingStrip', x: 395, y: 110, w: 70, h: 130, name: "10-Pad Urine Reagent Strip", reqStep: 3 },
+      { id: 'matStrip', x: 485, y: 395, w: 220, h: 45, name: "Developed Reagent Strip (Click to Open Color Comparator)", reqStep: 4 },
+      { id: 'stopwatch', x: 590, y: 265, w: 110, h: 110, name: "Digital Incubation Stopwatch (60 sec)", reqStep: 4 },
+      { id: 'pipette', x: 715, y: 200, w: 65, h: 205, name: "Pasteur Dropper Pipette", reqStep: 5 },
+      { id: 'refractometer', x: 795, y: 270, w: 105, h: 150, name: "Clinical Optical Refractometer (Click to Read SG Scale)", reqStep: 6 },
+      { id: 'microscope', x: 910, y: 165, w: 165, h: 265, name: "Binocular Phase-Contrast Microscope (Click for 400x View)", reqStep: 6 }
+    ];
 
-      if (stepNumber >= 1 && stepNumber <= 4) {
-        const activeBox = document.getElementById(`control-box-${stepNumber}`);
-        const activeGuide = document.getElementById(`guide-badge-${stepNumber}`);
-        if (activeBox) activeBox.classList.add('control-spotlight');
-        if (activeGuide) {
-          activeGuide.classList.remove('hidden');
-          activeGuide.classList.add('flex');
-        }
-      }
+    function updateBannerUI() {
+      const info = STEP_INSTRUCTIONS[labState.step];
+      document.getElementById('step-number-circle').textContent = labState.step;
+      document.getElementById('step-header-tag').textContent = info.tag;
+      document.getElementById('instruction-banner-text').textContent = info.text;
+      renderWorksheetTable();
     }
 
-    function focusControlSection(stepNumber) {
-      advanceProcedureStep(stepNumber);
-      const targetBox = document.getElementById(`control-box-${stepNumber}`);
-      if (targetBox) {
-        targetBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+    function changeSpecimen() {
+      labState.specimenKey = document.getElementById('specimen-select').value;
+      resetLabBench();
     }
 
-    // STEP 1 -> STEP 2
-    function onSampleSelected() {
-      const key = document.getElementById('sample-select').value;
-      document.getElementById('sample-clinical-note').textContent = URINE_SAMPLES[key].clinicalNote;
-      resetDipstickToStandby();
-      runUrinalysisEngine(false);
-      advanceProcedureStep(2);
-    }
-
-    // STEP 2 -> STEP 3
-    function onHardwareChanged() {
-      updateHardwareReadout();
-      runUrinalysisEngine(false);
-      advanceProcedureStep(3);
-    }
-
-    function proceedToStep3() {
-      advanceProcedureStep(3);
-      document.getElementById('control-box-3').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    function updateHardwareReadout() {
-      const temp = parseInt(document.getElementById('specimen-temp').value);
-      const time = parseInt(document.getElementById('read-time').value);
-      document.getElementById('temp-val').innerHTML = `${temp} &deg;C ${temp === 20 ? '(20&deg;C Ref)' : '(SG Offset)'}`;
-      let timeTag = "Standard";
-      if (time < 45) timeTag = "Short!";
-      else if (time > 120) timeTag = "Over-incubated!";
-      document.getElementById('time-val').textContent = `${time} sec (${timeTag})`;
-    }
-
-    function standardizeAssay() {
-      document.getElementById('specimen-temp').value = 20;
-      document.getElementById('read-time').value = 60;
-      document.getElementById('storage-state').value = 'fresh';
-      updateHardwareReadout();
-      triggerDipstickAnimation();
-    }
-
-    function resetDipstickToStandby() {
-      dipAnimState.phase = 'standby';
-      dipAnimState.armX = 115;
-      dipAnimState.armY = 16;
-      dipAnimState.laserY = 28;
-      dipAnimState.padProgress = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-      dipAnimState.waveAmplitude = 2.4;
-      dipAnimState.drips = [];
-      document.getElementById('stage-status-pill').textContent = 'Ready to Dip';
-      document.getElementById('reaction-timer-badge').textContent = 'Timer: 00.0s';
-      document.getElementById('analyzer-status').textContent = 'STANDBY';
-      document.getElementById('analyzer-status').className = 'mono text-[11px] px-2.5 py-0.5 rounded bg-amber-400 text-slate-950 font-bold';
-    }
-
-    function resetSimulator() {
-      document.getElementById('sample-select').value = 'normal';
-      document.getElementById('specimen-temp').value = 20;
-      document.getElementById('read-time').value = 60;
-      document.getElementById('storage-state').value = 'fresh';
-      document.getElementById('calc-sg').value = '';
-      document.getElementById('calc-osm').value = '';
-      document.getElementById('calc-feedback').classList.add('hidden');
-      observationLog = [];
-      document.getElementById('observation-log-body').innerHTML = `
-        <tr>
-          <td colspan="9" class="p-4 text-center text-slate-400 font-sans">
-            Dip the reagent strip in Step 3 to automatically record your experimental observations here.
-          </td>
-        </tr>
-      `;
-      document.getElementById('log-count-badge').textContent = 'Ready to Record';
-      sedimentZoom = 1.0;
-      document.getElementById('sed-zoom-label').textContent = '400x';
-      setSedimentFilter('all');
-      updateHardwareReadout();
-      document.getElementById('sample-clinical-note').textContent = URINE_SAMPLES.normal.clinicalNote;
-      resetDipstickToStandby();
-      runUrinalysisEngine(false);
-      advanceProcedureStep(1);
-    }
-
-    // STEP 3 -> STEP 4: Trigger Dipstick Immersion & Comparator Read
-    function triggerDipstickAnimation() {
-      dipAnimState.phase = 'plunging';
-      dipAnimState.armX = 115;
-      dipAnimState.armY = 16;
-      dipAnimState.soakTicks = 0;
-      dipAnimState.laserY = 28;
-      dipAnimState.padProgress = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-      dipAnimState.waveAmplitude = 6.0;
-      dipAnimState.drips = [];
-
-      dipAnimState.bubbles = [];
-      for (let b = 0; b < 18; b++) {
-        dipAnimState.bubbles.push({
-          x: 82 + Math.random() * 64,
-          y: 120 + Math.random() * 115,
-          r: 1.5 + Math.random() * 2.5,
-          vy: 0.8 + Math.random() * 1.4
-        });
-      }
-
-      document.getElementById('stage-status-pill').textContent = 'Immersing Strip...';
-      document.getElementById('analyzer-status').textContent = 'INCUBATING';
-      document.getElementById('analyzer-status').className = 'mono text-[11px] px-2.5 py-0.5 rounded bg-cyan-400 text-slate-950 font-bold';
-
-      runUrinalysisEngine(true);
-      advanceProcedureStep(4);
-    }
-
-    // ==================== CORE URINALYSIS ENGINE ====================
-    function runUrinalysisEngine(autoLog = false) {
-      const sampleKey = document.getElementById('sample-select').value;
-      const base = URINE_SAMPLES[sampleKey];
-      const temp = parseInt(document.getElementById('specimen-temp').value);
-      const readTime = parseInt(document.getElementById('read-time').value);
-      const storage = document.getElementById('storage-state').value;
-
-      let ph = base.ph;
-      let rawSG = base.rawSG;
-      let corrSG = rawSG + ((temp - 20) / 3.0) * 0.001;
-      let glucose = { ...base.glucose };
-      let protein = { ...base.protein };
-      let ketones = { ...base.ketones };
-      let bilirubin = { ...base.bilirubin };
-      let urobilinogen = { ...base.urobilinogen };
-      let blood = { ...base.blood };
-      let nitrite = { ...base.nitrite };
-      let leukocytes = { ...base.leukocytes };
-
-      let flags = [];
-
-      if (storage === 'unpreserved') {
-        ph = Math.min(9.0, ph + 1.5);
-        nitrite = { label: "Positive (Bacterial Overgrowth)", pos: true, color: "#f43f5e", severity: 85 };
-        if (ph >= 8.0 && protein.mgdl === 0) {
-          protein = { label: "False 1+ (Alkaline Buffer Error)", mgdl: 30, color: "#4ade80", severity: 45 };
-        }
-        ketones.label = ketones.mgdl > 0 ? "Reduced (Volatilized)" : "Negative";
-        flags.push("Unpreserved sample (>4 hrs): Bacterial urease elevated pH, caused false-positive protein, and lysed casts.");
-      }
-
-      if (readTime < 45) {
-        if (leukocytes.wbc > 0) {
-          leukocytes = { label: "False Negative / Trace (<60s Read)", wbc: 10, color: "#f3e8ff", severity: 18 };
-        }
-        flags.push(`Premature readout at ${readTime}s (Leukocyte esterase requires 60–120s incubation).`);
-      } else if (readTime > 120) {
-        flags.push(`Extended readout at ${readTime}s (Reagent leaching between adjacent pads).`);
-      }
-
-      if (temp !== 20) {
-        flags.push(`Sample temperature (${temp}°C) differs from 20°C refractometer standard.`);
-      }
-
-      const pads = [
-        { code: "GLU", name: "Glucose", val: glucose.label, color: glucose.color, severity: glucose.severity, ref: "Negative (<15 mg/dL)", principle: "Glucose Oxidase + Peroxidase (Potassium Iodide chromogen)" },
-        { code: "KET", name: "Ketones (Acetoacetate)", val: ketones.label, color: ketones.color, severity: ketones.severity, ref: "Negative (<5 mg/dL)", principle: "Legal's Nitroprusside Reaction (Glycine / Alkaline Buffer)" },
-        { code: "BLD", name: "Blood / Hemoglobin", val: blood.label, color: blood.color, severity: blood.severity, ref: "Negative (0–2 RBC/HPF)", principle: "Heme Pseudoperoxidase + Tetramethylbenzidine (TMB)" },
-        { code: "PH",  name: "Urine pH", val: ph.toFixed(1), color: getPhColor(ph), severity: Math.abs(ph - 6.0) * 28, ref: "4.5 – 8.0", principle: "Double Indicator: Methyl Red + Bromothymol Blue" },
-        { code: "PRO", name: "Protein (Albumin)", val: protein.label, color: protein.color, severity: protein.severity, ref: "Negative (<10 mg/dL)", principle: "Protein Error of Indicators (Tetrabromophenol Blue @ pH 3)" },
-        { code: "NIT", name: "Nitrite", val: nitrite.label, color: nitrite.color, severity: nitrite.severity, ref: "Negative", principle: "Griess Diazotization Reaction (Gram-negative nitrate reduction)" },
-        { code: "LEU", name: "Leukocyte Esterase", val: leukocytes.label, color: leukocytes.color, severity: leukocytes.severity, ref: "Negative (<10 WBC/µL)", principle: "Indoxylcarbonic Acid Ester Hydrolysis + Diazonium Salt" },
-        { code: "BIL", name: "Bilirubin (Direct)", val: bilirubin.label, color: bilirubin.color, severity: bilirubin.severity, ref: "Negative", principle: "Diazo Coupling (2,4-Dichloroaniline Diazonium Salt)" },
-        { code: "URO", name: "Urobilinogen", val: urobilinogen.label, color: urobilinogen.color, severity: urobilinogen.severity, ref: "0.2 – 1.0 mg/dL", principle: "Ehrlich's Aldehyde Reaction (p-Dimethylaminobenzaldehyde)" },
-        { code: "SG",  name: "Specific Gravity", val: corrSG.toFixed(3), color: getSgColor(corrSG), severity: Math.min(95, Math.abs(corrSG - 1.015) * 3500), ref: "1.005 – 1.030", principle: "Polyelectrolyte pKa Shift with Ionic Strength" }
-      ];
-
-      currentComputedResult = {
-        timestamp: new Date().toLocaleTimeString(),
-        idCode: base.idCode,
-        sampleKey,
-        sampleName: base.name,
-        colorName: base.colorName,
-        liquidTopColor: base.liquidTopColor,
-        liquidBotColor: base.liquidBotColor,
-        turbidity: storage === 'unpreserved' ? Math.min(0.85, base.turbidity + 0.35) : base.turbidity,
-        clarityName: storage === 'unpreserved' ? "Turbid (Overgrowth)" : base.clarityName,
-        foamColor: base.foamColor,
-        rawSG, corrSG, ph, temp, readTime, storage,
-        glucose, protein, ketones, bilirubin, urobilinogen, blood, nitrite, leukocytes,
-        sedimentTag: base.sedimentTag,
-        impression: base.impression,
-        pads,
-        sedimentConfig: base.sedimentConfig,
-        flags: flags.length ? flags.join(" | ") : "None"
-      };
-
-      document.getElementById('phys-color').textContent = currentComputedResult.colorName;
-      document.getElementById('phys-clarity').textContent = currentComputedResult.clarityName;
-      document.getElementById('phys-raw-sg').textContent = rawSG.toFixed(3);
-      document.getElementById('phys-corr-sg').textContent = corrSG.toFixed(3);
-      document.getElementById('sediment-summary-tag').textContent = base.sedimentTag;
-      document.getElementById('diagnostic-impression').textContent = base.impression;
-
-      const flagBanner = document.getElementById('flag-banner');
-      if (flags.length === 0) {
-        flagBanner.textContent = "Quality Control: Fresh clean-catch specimen at 20°C and 60s standard incubation.";
-        flagBanner.className = "text-xs text-emerald-700 font-medium mt-0.5";
-      } else {
-        flagBanner.textContent = flags.join(" | ");
-        flagBanner.className = "text-xs text-amber-700 font-semibold mt-0.5";
-      }
-
-      renderUrinalysisTable(currentComputedResult);
-      renderBiochemicalPlots(currentComputedResult);
-      initSedimentParticles(currentComputedResult);
-
-      if (autoLog) {
-        autoRecordToLog(currentComputedResult);
-      }
-    }
-
-    function getPhColor(ph) {
-      if (ph <= 5.0) return "#f97316";
-      if (ph <= 6.0) return "#eab308";
-      if (ph <= 7.0) return "#84cc16";
-      return "#0d9488";
-    }
-
-    function getSgColor(sg) {
-      if (sg <= 1.010) return "#1e3a8a";
-      if (sg <= 1.020) return "#0f766e";
-      return "#ca8a04";
+    function resetLabBench() {
+      labState.step = 1;
+      labState.animBusy = false;
+      labState.bottleX = 110;
+      labState.bottleY = 75;
+      labState.bottleAngle = 0;
+      labState.pouringStream = false;
+      labState.tubeFillLevel = 0;
+      labState.capOpen = false;
+      labState.stripVisible = false;
+      labState.stripX = 430;
+      labState.stripY = 165;
+      labState.stripHorizontal = false;
+      labState.colorDevProgress = 0;
+      labState.timerSec = 0;
+      labState.timerRunning = false;
+      labState.pipetteX = 735;
+      labState.pipetteY = 225;
+      labState.pipetteFilled = false;
+      labState.slideLoaded = false;
+      labState.microscopeFocus = 18;
+      closeOcularModal();
+      document.getElementById('clinical-diagnosis-badge').textContent = "Awaiting Assay...";
+      document.getElementById('clinical-diagnosis-badge').className = "text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300";
+      updateBannerUI();
     }
 
     function interpolateHex(hex1, hex2, factor) {
@@ -1107,940 +585,902 @@
       return `rgb(${r}, ${g}, ${b})`;
     }
 
-    // ==================== WET-LAB DIPSTICK WORKBENCH & BOTTLE COMPARATOR CANVAS ====================
-    function animateDipstickBench() {
-      const canvas = document.getElementById('dipstick-canvas');
-      if (canvas && currentComputedResult) {
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // ==================== MAIN 2D PHYSICAL LAB BENCH RENDERER ====================
+    function renderLabBench() {
+      const canvas = document.getElementById('lab-bench-canvas');
+      const ctx = canvas.getContext('2d');
+      const spec = SPECIMENS[labState.specimenKey];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Lab Wall & Stainless Steel Countertop Surface
-        const wallGrad = ctx.createLinearGradient(0, 0, 0, 235);
-        wallGrad.addColorStop(0, '#0f172a');
-        wallGrad.addColorStop(1, '#1e293b');
-        ctx.fillStyle = wallGrad;
-        ctx.fillRect(0, 0, canvas.width, 235);
+      // 1. Lab Room Tiled Back Wall (y: 0 to 365)
+      const wallGrad = ctx.createLinearGradient(0, 0, 0, 365);
+      wallGrad.addColorStop(0, '#e2e8f0');
+      wallGrad.addColorStop(1, '#cbd5e1');
+      ctx.fillStyle = wallGrad;
+      ctx.fillRect(0, 0, canvas.width, 365);
 
-        // Countertop Bench Surface (y: 235 to 280)
-        const benchGrad = ctx.createLinearGradient(0, 235, 0, 280);
-        benchGrad.addColorStop(0, '#334155');
-        benchGrad.addColorStop(0.15, '#475569');
-        benchGrad.addColorStop(1, '#1e293b');
-        ctx.fillStyle = benchGrad;
-        ctx.fillRect(0, 235, canvas.width, 45);
+      // Subtle Lab Wall Ceramic Tile Grid
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.28)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < canvas.width; x += 65) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 365); ctx.stroke();
+      }
+      for (let y = 0; y < 365; y += 45) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
 
-        // ==================== STATE MACHINE TRANSITIONS ====================
-        if (dipAnimState.phase === 'plunging') {
-          dipAnimState.armY += 2.6;
-          dipAnimState.waveAmplitude = 5.5;
-          if (dipAnimState.armY >= 52) {
-            dipAnimState.armY = 52;
-            dipAnimState.phase = 'soaking';
-            document.getElementById('stage-status-pill').textContent = 'Wetting Reagent Pads...';
-          }
-        } else if (dipAnimState.phase === 'soaking') {
-          dipAnimState.soakTicks++;
-          dipAnimState.waveAmplitude = Math.max(2.0, dipAnimState.waveAmplitude * 0.96);
-          if (dipAnimState.soakTicks > 26) {
-            dipAnimState.phase = 'withdrawing';
-            document.getElementById('stage-status-pill').textContent = 'Withdrawing & Blotting Edge...';
-            for (let d = 0; d < 5; d++) {
-              dipAnimState.drips.push({
-                x: 111 + Math.random() * 8,
-                y: 75 + d * 18,
-                vy: 1.8 + Math.random() * 1.2
-              });
-            }
-          }
-        } else if (dipAnimState.phase === 'withdrawing') {
-          dipAnimState.armY -= 2.4;
-          if (dipAnimState.armY <= 16) {
-            dipAnimState.armY = 16;
-            dipAnimState.phase = 'transferring';
-            document.getElementById('stage-status-pill').textContent = 'Aligning with Color Chart...';
-          }
-        } else if (dipAnimState.phase === 'transferring') {
-          dipAnimState.armX += 5.8;
-          if (dipAnimState.armX >= 285) {
-            dipAnimState.armX = 285;
-            dipAnimState.phase = 'scanning';
-            dipAnimState.laserY = 26;
-            document.getElementById('stage-status-pill').textContent = 'Developing Chromogens...';
-          }
-        } else if (dipAnimState.phase === 'scanning') {
-          dipAnimState.laserY += 2.2;
-          currentComputedResult.pads.forEach((_, idx) => {
-            const padCenterY = 34 + idx * 20.5;
-            if (dipAnimState.laserY >= padCenterY - 12) {
-              dipAnimState.padProgress[idx] = Math.min(1.0, dipAnimState.padProgress[idx] + 0.08);
-            }
-          });
-          const avgProg = dipAnimState.padProgress.reduce((a, b) => a + b, 0) / 10;
-          const simSec = (avgProg * currentComputedResult.readTime).toFixed(1);
-          document.getElementById('reaction-timer-badge').textContent = `Timer: ${simSec}s / ${currentComputedResult.readTime}s`;
+      // 2. Top Left Wooden Reagent Shelf (x: 40 to 310, y: 195)
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(45, 195, 250, 12);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(65, 207, 12, 22);
+      ctx.fillRect(265, 207, 12, 22);
 
-          if (dipAnimState.laserY >= 240) {
-            dipAnimState.padProgress = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-            dipAnimState.phase = 'complete';
-            document.getElementById('stage-status-pill').textContent = 'Reaction Complete';
-            document.getElementById('reaction-timer-badge').textContent = `Timer: ${currentComputedResult.readTime}.0s (Done)`;
-            document.getElementById('analyzer-status').textContent = 'COMPLETED';
-            document.getElementById('analyzer-status').className = 'mono text-[11px] px-2.5 py-0.5 rounded bg-emerald-400 text-slate-950 font-bold';
-          }
-        } else {
-          dipAnimState.waveAmplitude = Math.max(1.1, dipAnimState.waveAmplitude * 0.98);
-        }
+      // 3. Physical Lab Benchtop Surface (Granite / Teak Countertop, y: 365 to 540)
+      const benchGrad = ctx.createLinearGradient(0, 365, 0, 540);
+      benchGrad.addColorStop(0, '#334155');
+      benchGrad.addColorStop(0.06, '#475569');
+      benchGrad.addColorStop(0.12, '#1e293b');
+      benchGrad.addColorStop(1, '#0f172a');
+      ctx.fillStyle = benchGrad;
+      ctx.fillRect(0, 365, canvas.width, 175);
 
-        // ==================== LEFT BENCH: TEST TUBE IN STAINLESS STEEL RACK ====================
-        const tubeX = 72, tubeY = 42, tubeW = 86, tubeH = 205;
-        const liquidSurfaceY = 82;
+      // Benchtop Front Bevel Line
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, 372); ctx.lineTo(canvas.width, 372); ctx.stroke();
 
-        // Back Rack Bar
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(42, 165, 146, 8);
-        ctx.fillRect(48, 165, 8, 82);
-        ctx.fillRect(174, 165, 8, 82);
+      // ==================== APPARATUS 1: PATIENT URINE SPECIMEN BOTTLE ====================
+      ctx.save();
+      ctx.translate(labState.bottleX + 40, labState.bottleY + 60);
+      ctx.rotate(labState.bottleAngle);
+      ctx.translate(-(labState.bottleX + 40), -(labState.bottleY + 60));
 
-        // Glass Centrifuge Tube Body
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
+      // Bottle Body
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.78)';
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(labState.bottleX, labState.bottleY + 20, 76, 100, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      // Urine inside Specimen Bottle
+      ctx.fillStyle = spec.liquidColor;
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath();
+      ctx.roundRect(labState.bottleX + 4, labState.bottleY + 45, 68, 72, 6);
+      ctx.fill();
+      ctx.globalAlpha = 1.0;
+
+      // Red Screw Cap
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(labState.bottleX + 10, labState.bottleY + 6, 56, 15);
+
+      // Specimen Label Sticker
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(labState.bottleX + 8, labState.bottleY + 55, 60, 36);
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.strokeRect(labState.bottleX + 8, labState.bottleY + 55, 60, 36);
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 9px JetBrains Mono, monospace';
+      ctx.fillText(spec.code, labState.bottleX + 13, labState.bottleY + 68);
+      ctx.font = '8px Inter, sans-serif';
+      ctx.fillText('URINE 50mL', labState.bottleX + 13, labState.bottleY + 82);
+      ctx.restore();
+
+      // Pouring Liquid Stream when Bottle Tilts
+      if (labState.pouringStream) {
+        ctx.strokeStyle = spec.liquidColor;
+        ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.roundRect(tubeX, tubeY, tubeW, tubeH, [4, 4, 30, 30]);
+        ctx.moveTo(235, 165);
+        ctx.lineTo(252, 375);
+        ctx.stroke();
+      }
+
+      // ==================== APPARATUS 2: GRADUATED CONICAL TEST TUBE IN RACK ====================
+      // Stainless Test Tube Rack
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(195, 285, 115, 8);
+      ctx.fillRect(195, 395, 115, 12);
+      ctx.fillRect(202, 285, 8, 120);
+      ctx.fillRect(295, 285, 8, 120);
+
+      // Glass Conical Tube (x: 235, y: 215, w: 34, h: 180)
+      const tx = 235, ty = 215, tw = 34, th = 180;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.beginPath();
+      ctx.roundRect(tx, ty, tw, th, [2, 2, 16, 16]);
+      ctx.fill();
+
+      // Urine Fill inside Graduated Tube
+      if (labState.tubeFillLevel > 0) {
+        const fillH = labState.tubeFillLevel * 135;
+        const fillY = ty + th - fillH;
+        const uGrad = ctx.createLinearGradient(tx, fillY, tx, ty + th);
+        uGrad.addColorStop(0, spec.liquidColor);
+        uGrad.addColorStop(1, spec.liquidDeep);
+        ctx.fillStyle = uGrad;
+        ctx.beginPath();
+        ctx.roundRect(tx + 2, fillY, tw - 4, fillH - 2, [0, 0, 14, 14]);
         ctx.fill();
 
-        // Clip inside glass tube for urine liquid
-        ctx.save();
-        ctx.beginPath();
-        ctx.roundRect(tubeX + 3, tubeY + 3, tubeW - 6, tubeH - 6, [2, 2, 27, 27]);
-        ctx.clip();
-
-        const timeNow = Date.now() * 0.006;
-        const uGrad = ctx.createLinearGradient(tubeX, liquidSurfaceY, tubeX, tubeY + tubeH);
-        uGrad.addColorStop(0, currentComputedResult.liquidTopColor);
-        uGrad.addColorStop(1, currentComputedResult.liquidBotColor);
-
-        ctx.fillStyle = uGrad;
-        ctx.globalAlpha = 0.85;
-        ctx.beginPath();
-        ctx.moveTo(tubeX, tubeY + tubeH);
-        ctx.lineTo(tubeX, liquidSurfaceY);
-        for (let wx = 0; wx <= tubeW; wx += 4) {
-          const wy = liquidSurfaceY + Math.sin(wx * 0.09 + timeNow) * dipAnimState.waveAmplitude;
-          ctx.lineTo(tubeX + wx, wy);
+        // Surface Foam if Proteinuria or Bilirubinuria
+        if (spec.foam && labState.tubeFillLevel > 0.8) {
+          ctx.fillStyle = spec.foam;
+          for (let f = 0; f < 5; f++) {
+            ctx.beginPath();
+            ctx.arc(tx + 6 + f * 5.5, fillY, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
         }
-        ctx.lineTo(tubeX + tubeW, tubeY + tubeH);
+      }
+
+      // Tube Glass Outline & Graduation Marks
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(tx, ty, tw, th, [2, 2, 16, 16]);
+      ctx.stroke();
+      for (let m = 1; m <= 5; m++) {
+        const my = ty + th - m * 26;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(tx + tw - 8, my, 6, 1.2);
+      }
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'bold 10px Inter, sans-serif';
+      ctx.fillText('15 mL Tube', 224, 424);
+
+      // Absorbent Blotting Tissue Paper on Bench (x: 318, y: 392)
+      ctx.fillStyle = '#f8fafc';
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.beginPath();
+      ctx.roundRect(318, 392, 58, 22, 3);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#64748b';
+      ctx.font = '9px Inter, sans-serif';
+      ctx.fillText('Blotting Pad', 321, 426);
+
+      // ==================== APPARATUS 3: 10-PAD REAGENT STRIP BOTTLE ====================
+      const bx = 395, by = 248, bw = 74, bh = 150;
+      ctx.fillStyle = '#f8fafc';
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, bw, bh, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Bottle Cap (Closed on top or Open on bench)
+      ctx.fillStyle = '#1e293b';
+      if (!labState.capOpen) {
+        ctx.fillRect(bx + 8, by - 16, bw - 16, 16);
+      } else {
+        ctx.fillRect(bx - 32, by + bh - 14, 28, 14);
+      }
+
+      // Bottle Label with Mini Color Chart Swatches
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(bx + 6, by + 18, bw - 12, bh - 30);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 8px Inter, sans-serif';
+      ctx.fillText('10-PAD STRIPS', bx + 9, by + 30);
+      for (let r = 0; r < 8; r++) {
+        const ry = by + 38 + r * 11;
+        ctx.fillStyle = DRY_COLORS[r];
+        ctx.fillRect(bx + 10, ry, 10, 7);
+        ctx.fillStyle = spec.pads[r].color;
+        ctx.fillRect(bx + 24, ry, 10, 7);
+        ctx.fillStyle = '#be123c';
+        ctx.fillRect(bx + 38, ry, 10, 7);
+      }
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'bold 10px Inter, sans-serif';
+      ctx.fillText('Strip Bottle', 404, 424);
+
+      // ==================== APPARATUS 4: REAGENT DIPSTICK (VERTICAL OR HORIZONTAL ON MAT) ====================
+      // White Reading Mat on Bench (x: 485, y: 395)
+      ctx.fillStyle = '#334155';
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(485, 392, 225, 38, 6);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '9px Inter, sans-serif';
+      ctx.fillText('Optical Strip Reading Tray (Click Strip to Compare Colors)', 488, 444);
+
+      if (labState.stripVisible) {
+        if (!labState.stripHorizontal) {
+          // Vertical Strip Held Above Bottle or Dipping in Tube
+          const sx = labState.stripX, sy = labState.stripY;
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#64748b';
+          ctx.lineWidth = 1.5;
+          ctx.fillRect(sx, sy, 16, 125);
+          ctx.strokeRect(sx, sy, 16, 125);
+
+          spec.pads.forEach((p, idx) => {
+            const py = sy + 12 + idx * 11;
+            ctx.fillStyle = interpolateHex(DRY_COLORS[idx], p.color, labState.colorDevProgress);
+            ctx.fillRect(sx + 2, py, 12, 8);
+          });
+        } else {
+          // Horizontal Strip Resting on the Reading Mat (x: 498, y: 403)
+          const hx = 498, hy = 403;
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#64748b';
+          ctx.lineWidth = 1.5;
+          ctx.fillRect(hx, hy, 200, 16);
+          ctx.strokeRect(hx, hy, 200, 16);
+
+          spec.pads.forEach((p, idx) => {
+            const px = hx + 12 + idx * 18.5;
+            ctx.fillStyle = interpolateHex(DRY_COLORS[idx], p.color, labState.colorDevProgress);
+            ctx.fillRect(px, hy + 2, 14, 12);
+          });
+        }
+      }
+
+      // ==================== APPARATUS 5: DIGITAL INCUBATION STOPWATCH (x: 600, y: 275) ====================
+      const swX = 645, swY = 325;
+      // Stopwatch Top Button
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(swX - 8, swY - 56, 16, 10);
+      // Metallic Bezel
+      ctx.beginPath();
+      ctx.arc(swX, swY, 44, 0, Math.PI * 2);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#475569';
+      ctx.stroke();
+
+      // Digital LCD Face
+      ctx.beginPath();
+      ctx.arc(swX, swY, 34, 0, Math.PI * 2);
+      ctx.fillStyle = '#091914';
+      ctx.fill();
+
+      ctx.fillStyle = labState.timerSec >= 60 ? '#34d399' : '#fbbf24';
+      ctx.font = 'bold 14px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${String(labState.timerSec).padStart(2, '0')}s`, swX, swY + 4);
+      ctx.font = '8px Inter, sans-serif';
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('TARGET: 60s', swX, swY + 18);
+      ctx.textAlign = 'left';
+
+      // ==================== APPARATUS 6: PASTEUR PIPETTE IN HOLDER (x: 735, y: 225) ====================
+      const px = labState.pipetteX, py = labState.pipetteY;
+      // Rubber Bulb
+      ctx.fillStyle = '#be123c';
+      ctx.beginPath();
+      ctx.roundRect(px - 7, py, 14, 28, 7);
+      ctx.fill();
+      // Glass Capillary Stem
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(px - 4, py + 28, 8, 95);
+      ctx.strokeRect(px - 4, py + 28, 8, 95);
+      if (labState.pipetteFilled) {
+        ctx.fillStyle = spec.liquidColor;
+        ctx.fillRect(px - 3, py + 75, 6, 48);
+      }
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'bold 10px Inter, sans-serif';
+      ctx.fillText('Pipette', 720, 424);
+
+      // ==================== APPARATUS 7: CLINICAL OPTICAL REFRACTOMETER (x: 810, y: 315) ====================
+      const rx = 805, ry = 325;
+      ctx.fillStyle = '#1e293b';
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(rx, ry, 88, 68, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      // Daylight Prism Flap (Glows with urine drop when loaded)
+      ctx.fillStyle = labState.slideLoaded ? spec.liquidColor : '#38bdf8';
+      ctx.fillRect(rx + 12, ry - 6, 36, 6);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 9px JetBrains Mono, monospace';
+      ctx.fillText(`SG: ${labState.slideLoaded ? spec.sg.toFixed(3) : '---'}`, rx + 12, ry + 38);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'bold 10px Inter, sans-serif';
+      ctx.fillText('Refractometer', 812, 424);
+
+      // ==================== APPARATUS 8: BINOCULAR LAB MICROSCOPE (x: 935, y: 175) ====================
+      const mx = 945, my = 185;
+      // Heavy Base
+      ctx.fillStyle = '#f8fafc';
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(mx, my + 185, 125, 28, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      // Curved C-Arm Stand
+      ctx.lineWidth = 18;
+      ctx.strokeStyle = '#f1f5f9';
+      ctx.beginPath();
+      ctx.moveTo(mx + 95, my + 185);
+      ctx.quadraticCurveTo(mx + 115, my + 95, mx + 65, my + 35);
+      ctx.stroke();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#475569';
+      ctx.stroke();
+
+      // Mechanical Stage & Glass Slide
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(mx + 12, my + 118, 78, 10);
+      if (labState.slideLoaded) {
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(mx + 22, my + 114, 44, 4);
+        ctx.fillStyle = spec.liquidColor;
+        ctx.beginPath();
+        ctx.arc(mx + 44, my + 114, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Revolving Nosepiece & 400x Objective Lenses
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(mx + 34, my + 68, 26, 16);
+      ctx.fillStyle = '#eab308';
+      ctx.fillRect(mx + 41, my + 84, 12, 22);
+
+      // Eyepiece Head & Ocular Tube
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.roundRect(mx + 28, my + 20, 46, 48, 6);
+      ctx.fill();
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.moveTo(mx + 32, my + 24);
+      ctx.lineTo(mx + 14, my - 2);
+      ctx.stroke();
+
+      // Coarse & Fine Focus Knobs
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(mx + 92, my + 148, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#a4123f';
+      ctx.beginPath();
+      ctx.arc(mx + 92, my + 148, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'bold 10px Inter, sans-serif';
+      ctx.fillText('400x Microscope (Click)', 942, 434);
+
+      // ==================== GUIDED BOUNCING RED POINTER (IITK VLAB STYLE) ====================
+      if (!labState.animBusy && STEP_INSTRUCTIONS[labState.step]) {
+        const ptr = STEP_INSTRUCTIONS[labState.step].pointer;
+        const bounceOffset = Math.sin(Date.now() * 0.008) * 7;
+        const px = ptr.x, py = ptr.y + bounceOffset;
+
+        // Label Pill
+        ctx.fillStyle = '#a4123f';
+        ctx.beginPath();
+        ctx.roundRect(px - 68, py - 34, 136, 22, 6);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(ptr.label, px, py - 19);
+
+        // Downward Red Triangle Arrow
+        ctx.fillStyle = '#e11d48';
+        ctx.beginPath();
+        ctx.moveTo(px - 10, py - 10);
+        ctx.lineTo(px + 10, py - 10);
+        ctx.lineTo(px, py + 4);
         ctx.closePath();
         ctx.fill();
-        ctx.globalAlpha = 1.0;
-
-        // Meniscus Rim
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        for (let wx = 0; wx <= tubeW; wx += 4) {
-          const wy = liquidSurfaceY + Math.sin(wx * 0.09 + timeNow) * dipAnimState.waveAmplitude;
-          if (wx === 0) ctx.moveTo(tubeX + wx, wy);
-          else ctx.lineTo(tubeX + wx, wy);
-        }
-        ctx.stroke();
-
-        // Turbidity Particles
-        if (currentComputedResult.turbidity > 0.12) {
-          ctx.fillStyle = `rgba(255, 255, 255, ${currentComputedResult.turbidity * 0.5})`;
-          for (let t = 0; t < 28; t++) {
-            const tx = tubeX + 8 + ((t * 31 + Date.now() * 0.012) % (tubeW - 16));
-            const ty = liquidSurfaceY + 12 + ((t * 23 + Math.sin(timeNow + t) * 7) % (tubeH - 55));
-            ctx.beginPath();
-            ctx.arc(tx, ty, 2.0, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-
-        // Immersion Bubbles
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
-        ctx.lineWidth = 1;
-        dipAnimState.bubbles.forEach(b => {
-          b.y -= b.vy;
-          if (b.y < liquidSurfaceY + 4) b.y = tubeY + tubeH - 12;
-          ctx.beginPath();
-          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-          ctx.stroke();
-        });
-
-        // Surface Foam
-        if (currentComputedResult.foamColor) {
-          ctx.fillStyle = currentComputedResult.foamColor;
-          for (let f = 0; f < 12; f++) {
-            const fx = tubeX + 6 + f * 6.8;
-            const fy = liquidSurfaceY - 2 + Math.sin(timeNow + f) * 1.8;
-            ctx.beginPath();
-            ctx.arc(fx, fy, 4.8, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-        ctx.restore();
-
-        // Falling Urine Droplets
-        ctx.fillStyle = currentComputedResult.liquidTopColor;
-        dipAnimState.drips.forEach(d => {
-          d.y += d.vy;
-          if (d.y < liquidSurfaceY) {
-            ctx.beginPath();
-            ctx.arc(d.x, d.y, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        });
-
-        // Glass Tube Outline & Lip
-        ctx.strokeStyle = 'rgba(226, 232, 240, 0.8)';
-        ctx.lineWidth = 2.2;
-        ctx.beginPath();
-        ctx.roundRect(tubeX, tubeY, tubeW, tubeH, [4, 4, 30, 30]);
-        ctx.stroke();
-        ctx.strokeRect(tubeX - 3, tubeY - 3, tubeW + 6, 5);
-
-        // Patient Barcode Sticker on Tube
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
-        ctx.fillRect(tubeX + 6, tubeY + 22, 34, 44);
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 8px JetBrains Mono, monospace';
-        ctx.fillText(currentComputedResult.idCode, tubeX + 8, tubeY + 32);
-        // Barcode lines
-        for (let bl = 0; bl < 12; bl++) {
-          ctx.fillRect(tubeX + 8 + bl * 2.5, tubeY + 36, (bl % 2 === 0) ? 1.5 : 0.8, 18);
-        }
-        ctx.font = '7px Inter, sans-serif';
-        ctx.fillText(`${currentComputedResult.temp}°C`, tubeX + 10, tubeY + 62);
-
-        // Front Stainless Rack Base
-        ctx.fillStyle = 'rgba(148, 163, 184, 0.45)';
-        ctx.fillRect(42, 242, 146, 10);
-
-        // ==================== RIGHT BENCH: REAGENT BOTTLE COLOR COMPARATOR & STRIP HOLDER ====================
-        // Strip Holder Slot (x: 268 to 328)
-        ctx.fillStyle = '#0f172a';
-        ctx.strokeStyle = '#475569';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.roundRect(268, 18, 60, 238, 6);
-        ctx.fill();
-        ctx.stroke();
-
-        // Color Comparator Bottle Chart Card (x: 344 to 742)
-        ctx.fillStyle = '#0f172a';
-        ctx.strokeStyle = '#334155';
-        ctx.beginPath();
-        ctx.roundRect(344, 18, 398, 238, 8);
-        ctx.fill();
-        ctx.stroke();
-
-        // Draw 10 Analyte Rows on Comparator Chart
-        currentComputedResult.pads.forEach((pad, idx) => {
-          const rowY = 26 + idx * 20.5;
-          const prog = dipAnimState.padProgress[idx];
-          const isSelected = idx === selectedPadIndex;
-          const isHovered = idx === hoveredPadIndex;
-
-          if (isSelected || isHovered) {
-            ctx.fillStyle = isSelected ? 'rgba(164, 18, 63, 0.32)' : 'rgba(56, 189, 248, 0.12)';
-            ctx.fillRect(348, rowY - 1, 390, 18);
-          }
-
-          ctx.fillStyle = isSelected ? '#fda4af' : '#e2e8f0';
-          ctx.font = isSelected ? 'bold 10px JetBrains Mono, monospace' : '10px JetBrains Mono, monospace';
-          ctx.fillText(`${String(idx + 1).padStart(2, '0')}.${pad.code}`, 355, rowY + 11);
-
-          // 4 Colorimetric Reference Blocks (Neg, Trace/1+, 2+, 3+/4+)
-          const swatches = REFERENCE_SWATCHES[idx];
-          swatches.forEach((swColor, sIdx) => {
-            const sx = 412 + sIdx * 20;
-            ctx.fillStyle = swColor;
-            ctx.fillRect(sx, rowY + 2, 16, 12);
-            ctx.strokeStyle = '#334155';
-            ctx.lineWidth = 0.8;
-            ctx.strokeRect(sx, rowY + 2, 16, 12);
-          });
-
-          // Reflectance %R
-          const reflectancePct = Math.max(8, Math.round(92 - (pad.severity * 0.78 * prog)));
-          ctx.fillStyle = '#38bdf8';
-          ctx.font = '10px JetBrains Mono, monospace';
-          ctx.fillText(`%R:${String(reflectancePct).padStart(2, ' ')}%`, 502, rowY + 11);
-
-          // Semi-Quantitative Result Readout
-          const resText = prog > 0.4 ? pad.val : 'Unreacted (Dry)';
-          ctx.fillStyle = prog > 0.4 ? (pad.severity > 20 ? '#fca5a5' : '#6ee7b7') : '#64748b';
-          ctx.font = prog > 0.4 && pad.severity > 20 ? 'bold 10px Inter, sans-serif' : '10px Inter, sans-serif';
-          ctx.fillText(resText.slice(0, 26), 558, rowY + 11);
-        });
-
-        // ==================== STAINLESS FORCEPS & 10-PAD REAGENT STRIP ====================
-        const stripX = dipAnimState.armX - 15;
-        const stripY = dipAnimState.armY;
-
-        // Stainless Steel Forceps / Clip Holding Strip
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillRect(stripX + 9, 0, 12, stripY - 4);
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(stripX + 3, stripY - 8, 24, 10);
-
-        // White Plastic Reagent Strip Backing
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(stripX, stripY, 30, 218);
-        ctx.strokeStyle = '#94a3b8';
-        ctx.lineWidth = 1.2;
-        ctx.strokeRect(stripX, stripY, 30, 218);
-
-        // 10 Cellulose Reagent Pads
-        currentComputedResult.pads.forEach((pad, idx) => {
-          const py = stripY + 8 + idx * 20.5;
-          const prog = dipAnimState.padProgress[idx];
-          const currentPadColor = interpolateHex(DRY_PAD_COLORS[idx], pad.color, prog);
-
-          ctx.fillStyle = currentPadColor;
-          ctx.fillRect(stripX + 3, py, 24, 14);
-
-          if (idx === selectedPadIndex) {
-            ctx.strokeStyle = '#e11d48';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(stripX + 1, py - 2, 28, 18);
-          }
-        });
-
-        // Optical Read Head Sweep Line during Reaction Development
-        if (dipAnimState.phase === 'scanning') {
-          const ly = dipAnimState.laserY;
-          const laserGrad = ctx.createLinearGradient(260, ly, 550, ly);
-          laserGrad.addColorStop(0, 'rgba(16, 185, 129, 0)');
-          laserGrad.addColorStop(0.2, 'rgba(52, 211, 153, 0.95)');
-          laserGrad.addColorStop(0.6, 'rgba(56, 189, 248, 0.85)');
-          laserGrad.addColorStop(1, 'rgba(16, 185, 129, 0)');
-
-          ctx.fillStyle = 'rgba(52, 211, 153, 0.14)';
-          ctx.fillRect(268, ly - 7, 280, 14);
-
-          ctx.strokeStyle = laserGrad;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(264, ly);
-          ctx.lineTo(555, ly);
-          ctx.stroke();
-        }
+        ctx.textAlign = 'left';
       }
-      requestAnimationFrame(animateDipstickBench);
+
+      requestAnimationFrame(renderLabBench);
     }
 
-    // Dipstick Canvas Click & Hover Handlers
-    const dipCanvas = document.getElementById('dipstick-canvas');
-    const padTooltip = document.getElementById('pad-hover-tooltip');
+    // ==================== INTERACTIVE BENCH CLICK & HOVER HANDLERS ====================
+    const benchCanvas = document.getElementById('lab-bench-canvas');
+    const tooltip = document.getElementById('apparatus-tooltip');
 
-    dipCanvas.addEventListener('mousemove', (e) => {
-      if (!currentComputedResult) return;
-      const rect = dipCanvas.getBoundingClientRect();
-      const cx = ((e.clientX - rect.left) / dipCanvas.clientWidth) * dipCanvas.width;
-      const cy = ((e.clientY - rect.top) / dipCanvas.clientHeight) * dipCanvas.height;
+    function getCanvasMouse(e) {
+      const rect = benchCanvas.getBoundingClientRect();
+      return {
+        x: ((e.clientX - rect.left) / benchCanvas.clientWidth) * benchCanvas.width,
+        y: ((e.clientY - rect.top) / benchCanvas.clientHeight) * benchCanvas.height,
+        rawX: e.clientX - rect.left,
+        rawY: e.clientY - rect.top
+      };
+    }
 
-      let foundIdx = -1;
-      currentComputedResult.pads.forEach((_, idx) => {
-        const py = 26 + idx * 20.5;
-        if (cx >= 265 && cy >= py - 2 && cy <= py + 17) {
-          foundIdx = idx;
+    benchCanvas.addEventListener('mousemove', (e) => {
+      const m = getCanvasMouse(e);
+      let hit = null;
+      for (const box of HITBOXES) {
+        if (box.id === 'floatingStrip' && (!labState.stripVisible || labState.stripHorizontal)) continue;
+        if (box.id === 'matStrip' && !labState.stripHorizontal) continue;
+        if (m.x >= box.x && m.x <= box.x + box.w && m.y >= box.y && m.y <= box.y + box.h) {
+          hit = box;
+          break;
         }
-      });
+      }
 
-      hoveredPadIndex = foundIdx;
-      if (foundIdx !== -1) {
-        const p = currentComputedResult.pads[foundIdx];
-        padTooltip.classList.remove('hidden');
-        padTooltip.textContent = `Pad #${foundIdx + 1} (${p.code}): ${p.name}`;
+      if (hit) {
+        benchCanvas.style.cursor = 'pointer';
+        tooltip.classList.remove('hidden');
+        tooltip.style.left = `${Math.min(benchCanvas.clientWidth - 220, m.rawX + 14)}px`;
+        tooltip.style.top = `${Math.max(10, m.rawY - 32)}px`;
+        tooltip.textContent = hit.name;
       } else {
-        padTooltip.classList.add('hidden');
+        benchCanvas.style.cursor = 'default';
+        tooltip.classList.add('hidden');
       }
     });
 
-    dipCanvas.addEventListener('mouseleave', () => {
-      hoveredPadIndex = -1;
-      padTooltip.classList.add('hidden');
+    benchCanvas.addEventListener('mouseleave', () => {
+      tooltip.classList.add('hidden');
     });
 
-    dipCanvas.addEventListener('click', (e) => {
-      if (!currentComputedResult) return;
-      const rect = dipCanvas.getBoundingClientRect();
-      const cx = ((e.clientX - rect.left) / dipCanvas.clientWidth) * dipCanvas.width;
-      const cy = ((e.clientY - rect.top) / dipCanvas.clientHeight) * dipCanvas.height;
+    benchCanvas.addEventListener('click', (e) => {
+      if (labState.animBusy) return;
+      const m = getCanvasMouse(e);
 
-      if (cx < 210) {
-        triggerDipstickAnimation();
+      for (const box of HITBOXES) {
+        if (box.id === 'floatingStrip' && (!labState.stripVisible || labState.stripHorizontal)) continue;
+        if (box.id === 'matStrip' && !labState.stripHorizontal) continue;
+        if (m.x >= box.x && m.x <= box.x + box.w && m.y >= box.y && m.y <= box.y + box.h) {
+          handleApparatusClick(box.id);
+          break;
+        }
+      }
+    });
+
+    // ==================== STEP-BY-STEP APPARATUS ANIMATION SEQUENCES ====================
+    function handleApparatusClick(apparatusId) {
+      // Allow opening Color Chart or Microscope/Refractometer anytime after relevant steps
+      if (apparatusId === 'matStrip' && labState.stripHorizontal) {
+        openOcularModal('chart');
+        return;
+      }
+      if (apparatusId === 'refractometer' && labState.slideLoaded) {
+        openOcularModal('refractometer');
+        return;
+      }
+      if (apparatusId === 'microscope' && labState.slideLoaded) {
+        openOcularModal('microscope');
         return;
       }
 
-      currentComputedResult.pads.forEach((_, idx) => {
-        const py = 26 + idx * 20.5;
-        if (cy >= py - 2 && cy <= py + 17) {
-          selectBiochemicalPad(idx);
-        }
-      });
-    });
-
-    function selectBiochemicalPad(idx) {
-      selectedPadIndex = idx;
-      const pad = currentComputedResult.pads[idx];
-      document.getElementById('pad-inspector-banner').innerHTML = 
-        `<strong class="text-[#a4123f]">[Pad #${idx + 1}: ${pad.name}]</strong> Result: <strong>${pad.val}</strong> (Ref: ${pad.ref}) — <em>${pad.principle}</em>`;
-      renderUrinalysisTable(currentComputedResult);
-    }
-
-    // ==================== 400x WET-MOUNT URINE SEDIMENT MICROSCOPE ====================
-    function initSedimentParticles(r) {
-      const canvas = document.getElementById('sediment-canvas');
-      sedimentParticles = [];
-      const cfg = r.sedimentConfig;
-
-      for (let i = 0; i < cfg.rbc; i++) {
-        sedimentParticles.push({
-          id: `RBC-${i + 1}`,
-          category: 'cells',
-          subType: 'rbc',
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.25,
-          vy: (Math.random() - 0.5) * 0.25,
-          radius: 6.5,
-          title: "Urinary Erythrocyte (RBC)",
-          desc: "Non-nucleated biconcave disc (~7 µm). >3 RBC/HPF indicates hematuria."
-        });
-      }
-
-      for (let i = 0; i < cfg.wbc; i++) {
-        sedimentParticles.push({
-          id: `WBC-${i + 1}`,
-          category: 'cells',
-          subType: 'wbc',
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.2,
-          vy: (Math.random() - 0.5) * 0.2,
-          radius: 10.5,
-          title: "Urinary Leukocyte (Neutrophil)",
-          desc: "Granular leukocyte (~12 µm) with segmented nucleus. >5 WBC/HPF indicates pyuria."
-        });
-      }
-
-      if (r.storage !== 'unpreserved') {
-        for (let i = 0; i < cfg.casts; i++) {
-          let castTitle = "Hyaline Cast (Tamm-Horsfall Mucoprotein)";
-          let castDesc = "Low-refractive index cylindrical mold of the distal tubule.";
-          if (cfg.castType === 'granular') {
-            castTitle = "Granular / Fatty Cast";
-            castDesc = "Tamm-Horsfall matrix embedded with degenerated protein granules and lipid droplets.";
-          } else if (cfg.castType === 'wbc') {
-            castTitle = "Leukocyte Cellular Cast";
-            castDesc = "Tubular cast packed with leukocytes; indicates tubulointerstitial inflammation.";
-          } else if (cfg.castType === 'rbc') {
-            castTitle = "Erythrocyte (RBC) Cast";
-            castDesc = "Diagnostic hallmark of glomerular hematuria.";
-          } else if (cfg.castType === 'bilirubin') {
-            castTitle = "Bilirubin-Stained Cast";
-            castDesc = "Golden-brown conjugated bilirubin pigment bound to tubular matrix.";
+      // Step 1: Pour Urine from Specimen Bottle into Graduated Tube
+      if (labState.step === 1 && apparatusId === 'bottle') {
+        labState.animBusy = true;
+        let phase = 'moveToTube';
+        const timer = setInterval(() => {
+          if (phase === 'moveToTube') {
+            labState.bottleX += 4;
+            labState.bottleY += 1.5;
+            labState.bottleAngle += 0.045;
+            if (labState.bottleX >= 175) {
+              phase = 'pouring';
+              labState.pouringStream = true;
+            }
+          } else if (phase === 'pouring') {
+            labState.tubeFillLevel += 0.035;
+            if (labState.tubeFillLevel >= 1.0) {
+              labState.tubeFillLevel = 1.0;
+              labState.pouringStream = false;
+              phase = 'returnShelf';
+            }
+          } else if (phase === 'returnShelf') {
+            labState.bottleX -= 4;
+            labState.bottleY -= 1.5;
+            labState.bottleAngle -= 0.045;
+            if (labState.bottleX <= 110) {
+              labState.bottleX = 110;
+              labState.bottleY = 75;
+              labState.bottleAngle = 0;
+              clearInterval(timer);
+              labState.animBusy = false;
+              labState.step = 2;
+              updateBannerUI();
+            }
           }
-
-          sedimentParticles.push({
-            id: `CAST-${i + 1}`,
-            category: 'casts',
-            subType: cfg.castType,
-            x: 40 + Math.random() * (canvas.width - 80),
-            y: 30 + Math.random() * (canvas.height - 60),
-            vx: (Math.random() - 0.5) * 0.12,
-            vy: (Math.random() - 0.5) * 0.12,
-            angle: (Math.random() - 0.5) * 0.8,
-            radius: 22,
-            title: castTitle,
-            desc: castDesc
-          });
-        }
+        }, 25);
       }
 
-      for (let i = 0; i < cfg.crystals; i++) {
-        let crysTitle = "Calcium Oxalate Dihydrate ('Envelope' Octahedron)";
-        let crysDesc = "Bipyramidal octahedron precipitated in acidic/neutral urine.";
-        if (cfg.crystalType === 'uric') {
-          crysTitle = "Uric Acid Crystal (Amber Diamond)";
-          crysDesc = "Yellow-brown diamond crystal precipitated in acidic urine (pH < 5.8).";
-        } else if (cfg.crystalType === 'struvite' || r.storage === 'unpreserved') {
-          crysTitle = "Triple Phosphate (Struvite 'Coffin-Lid' Crystal)";
-          crysDesc = "Magnesium ammonium phosphate prism formed in alkaline urine (pH > 7.2).";
-        }
-
-        sedimentParticles.push({
-          id: `CRYS-${i + 1}`,
-          category: 'crystals',
-          subType: r.storage === 'unpreserved' ? 'struvite' : cfg.crystalType,
-          x: 25 + Math.random() * (canvas.width - 50),
-          y: 25 + Math.random() * (canvas.height - 50),
-          vx: (Math.random() - 0.5) * 0.15,
-          vy: (Math.random() - 0.5) * 0.15,
-          radius: 11,
-          title: crysTitle,
-          desc: crysDesc
-        });
+      // Step 2: Open Reagent Bottle & Pull Out 10-Pad Dipstick
+      else if (labState.step === 2 && apparatusId === 'stripBottle') {
+        labState.animBusy = true;
+        labState.capOpen = true;
+        labState.stripVisible = true;
+        labState.stripX = 424;
+        labState.stripY = 235;
+        const timer = setInterval(() => {
+          labState.stripY -= 4;
+          if (labState.stripY <= 115) {
+            labState.stripY = 115;
+            clearInterval(timer);
+            labState.animBusy = false;
+            labState.step = 3;
+            updateBannerUI();
+          }
+        }, 25);
       }
 
-      const bactCount = r.storage === 'unpreserved' ? Math.max(40, cfg.bacteria) : cfg.bacteria;
-      for (let i = 0; i < bactCount; i++) {
-        sedimentParticles.push({
-          id: `BACT-${i + 1}`,
-          category: 'crystals',
-          subType: 'bacteria',
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.85,
-          vy: (Math.random() - 0.5) * 0.85,
-          angle: Math.random() * Math.PI,
-          radius: 5,
-          title: "Motile Rod Bacilli (Gram-negative)",
-          desc: "Rod-shaped bacteria reducing urinary nitrates to nitrites."
-        });
+      // Step 3: Dip Strip into Urine Tube -> Blot on Tissue -> Place on Reading Mat
+      else if (labState.step === 3 && (apparatusId === 'floatingStrip' || apparatusId === 'tube')) {
+        labState.animBusy = true;
+        let phase = 'moveOverTube';
+        const timer = setInterval(() => {
+          if (phase === 'moveOverTube') {
+            labState.stripX -= 6;
+            if (labState.stripX <= 244) {
+              labState.stripX = 244;
+              phase = 'plungeDown';
+            }
+          } else if (phase === 'plungeDown') {
+            labState.stripY += 6;
+            if (labState.stripY >= 245) {
+              phase = 'withdrawUp';
+            }
+          } else if (phase === 'withdrawUp') {
+            labState.stripY -= 6;
+            if (labState.stripY <= 140) {
+              phase = 'blotOnTissue';
+            }
+          } else if (phase === 'blotOnTissue') {
+            labState.stripX += 4;
+            labState.stripY += 5;
+            if (labState.stripX >= 335) {
+              labState.stripHorizontal = true;
+              clearInterval(timer);
+              labState.animBusy = false;
+              labState.step = 4;
+              updateBannerUI();
+            }
+          }
+        }, 25);
+      }
+
+      // Step 4: Run 60-Second Stopwatch to Develop Pad Colors
+      else if (labState.step === 4 && apparatusId === 'stopwatch') {
+        labState.animBusy = true;
+        labState.timerSec = 0;
+        const timer = setInterval(() => {
+          labState.timerSec += 2;
+          labState.colorDevProgress = labState.timerSec / 60.0;
+          if (labState.timerSec >= 60) {
+            labState.timerSec = 60;
+            labState.colorDevProgress = 1.0;
+            clearInterval(timer);
+            labState.animBusy = false;
+            labState.step = 5;
+            const spec = SPECIMENS[labState.specimenKey];
+            document.getElementById('clinical-diagnosis-badge').textContent = spec.diagnosis;
+            document.getElementById('clinical-diagnosis-badge').className = "text-xs font-bold px-3 py-1 rounded-full bg-rose-100 text-[#a4123f] border border-rose-300";
+            updateBannerUI();
+            autoLogCompletedAssay();
+          }
+        }, 45);
+      }
+
+      // Step 5: Use Pasteur Pipette to Load Refractometer & Microscope Slide
+      else if (labState.step === 5 && apparatusId === 'pipette') {
+        labState.animBusy = true;
+        let phase = 'toTube';
+        const timer = setInterval(() => {
+          if (phase === 'toTube') {
+            labState.pipetteX -= 14;
+            labState.pipetteY -= 2;
+            if (labState.pipetteX <= 252) {
+              labState.pipetteX = 252;
+              labState.pipetteFilled = true;
+              phase = 'toInstruments';
+            }
+          } else if (phase === 'toInstruments') {
+            labState.pipetteX += 14;
+            if (labState.pipetteX >= 840) {
+              labState.slideLoaded = true;
+              labState.pipetteFilled = false;
+              phase = 'parkPipette';
+            }
+          } else if (phase === 'parkPipette') {
+            labState.pipetteX -= 5;
+            labState.pipetteY = 225;
+            if (labState.pipetteX <= 735) {
+              labState.pipetteX = 735;
+              clearInterval(timer);
+              labState.animBusy = false;
+              labState.step = 6;
+              updateBannerUI();
+            }
+          }
+        }, 25);
       }
     }
 
-    function animateSedimentMicroscope() {
-      const canvas = document.getElementById('sediment-canvas');
-      if (canvas && currentComputedResult) {
+    // ==================== OCULAR EYEPIECE MODAL (MICROSCOPE / REFRACTOMETER / COLOR CHART) ====================
+    function openOcularModal(mode) {
+      labState.activeModalMode = mode;
+      const spec = SPECIMENS[labState.specimenKey];
+      document.getElementById('ocular-modal').classList.remove('hidden');
+
+      const titleEl = document.getElementById('modal-title');
+      const focusPanel = document.getElementById('focus-knob-panel');
+      const headerEl = document.getElementById('modal-finding-header');
+      const textEl = document.getElementById('modal-finding-text');
+
+      if (mode === 'microscope') {
+        titleEl.textContent = `400x Phase-Contrast Microscope Ocular View — ${spec.name}`;
+        focusPanel.classList.remove('hidden');
+        headerEl.textContent = "Urinary Sediment Findings (400x HPF)";
+        textEl.textContent = spec.microscopyText;
+        initModalSediment(spec);
+      } else if (mode === 'refractometer') {
+        titleEl.textContent = `Optical Clinical Refractometer Scale — ${spec.name}`;
+        focusPanel.classList.add('hidden');
+        headerEl.textContent = "Specific Gravity & Refractometry";
+        textEl.textContent = `The blue/white shadowline boundary intersects the Specific Gravity scale at ${spec.sg.toFixed(3)} (Normal: 1.005–1.030).`;
+      } else if (mode === 'chart') {
+        titleEl.textContent = `10-Parameter Colorimetric Bottle Comparator — ${spec.name}`;
+        focusPanel.classList.add('hidden');
+        headerEl.textContent = "Visual & Reflectance Color Matching";
+        textEl.textContent = `Compare the developed reagent pads on the left strip against standard reference blocks. Diagnosis: ${spec.diagnosis}`;
+      }
+    }
+
+    function closeOcularModal() {
+      document.getElementById('ocular-modal').classList.add('hidden');
+    }
+
+    function updateMicroscopeFocus() {
+      labState.microscopeFocus = parseInt(document.getElementById('focus-slider').value);
+      const diff = Math.abs(labState.microscopeFocus - 50);
+      const label = document.getElementById('focus-status-label');
+      if (diff <= 8) {
+        label.textContent = "Sharp Focus (400x)";
+        label.className = "mono text-emerald-700 font-bold";
+      } else {
+        label.textContent = "Out of Focus (Adjust!)";
+        label.className = "mono text-[#a4123f] font-bold";
+      }
+    }
+
+    function initModalSediment(spec) {
+      labState.sedimentItems = [];
+      const s = spec.sediment;
+      for (let i = 0; i < s.rbc; i++) {
+        labState.sedimentItems.push({ type: 'rbc', x: 60 + Math.random() * 260, y: 40 + Math.random() * 190, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
+      }
+      for (let i = 0; i < s.wbc; i++) {
+        labState.sedimentItems.push({ type: 'wbc', x: 60 + Math.random() * 260, y: 40 + Math.random() * 190, vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25 });
+      }
+      for (let i = 0; i < s.casts; i++) {
+        labState.sedimentItems.push({ type: 'cast', sub: s.castType, x: 80 + Math.random() * 220, y: 50 + Math.random() * 170, angle: Math.random() });
+      }
+      for (let i = 0; i < s.crystals; i++) {
+        labState.sedimentItems.push({ type: 'crystal', sub: s.crystalType, x: 70 + Math.random() * 240, y: 50 + Math.random() * 170 });
+      }
+    }
+
+    function animateOcularCanvas() {
+      const modal = document.getElementById('ocular-modal');
+      if (!modal.classList.contains('hidden')) {
+        const canvas = document.getElementById('ocular-canvas');
         const ctx = canvas.getContext('2d');
+        const spec = SPECIMENS[labState.specimenKey];
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Dark-field / Phase-contrast field background
-        ctx.fillStyle = '#0c1322';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (labState.activeModalMode === 'microscope') {
+          const blurPx = Math.max(0, (Math.abs(labState.microscopeFocus - 50) - 5) * 0.18);
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(190, 135, 125, 0, Math.PI * 2);
+          ctx.clip();
 
-        // Ocular Micrometer Crosshair Reticle
-        ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, canvas.height / 2); ctx.lineTo(canvas.width, canvas.height / 2);
-        ctx.moveTo(canvas.width / 2, 0); ctx.lineTo(canvas.width / 2, canvas.height);
-        ctx.stroke();
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.filter = `blur(${blurPx}px)`;
 
-        ctx.save();
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.scale(sedimentZoom, sedimentZoom);
-        ctx.translate(-canvas.width / 2, -canvas.height / 2);
-
-        sedimentParticles.forEach(p => {
-          p.x += p.vx;
-          p.y += p.vy;
-          if (p.x < 12) p.x = canvas.width - 12;
-          if (p.x > canvas.width - 12) p.x = 12;
-          if (p.y < 12) p.y = canvas.height - 12;
-          if (p.y > canvas.height - 12) p.y = 12;
-
-          const dimmed = sedimentFilter !== 'all' && p.category !== sedimentFilter;
-          ctx.globalAlpha = dimmed ? 0.12 : 0.95;
-
-          if (p.subType === 'rbc') {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-            ctx.fillStyle = '#fb7185';
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius * 0.45, 0, Math.PI * 2);
-            ctx.fillStyle = '#881337';
-            ctx.fill();
-          } else if (p.subType === 'wbc') {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-            ctx.fillStyle = '#c4b5fd';
-            ctx.fill();
-            ctx.strokeStyle = '#a78bfa';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            ctx.fillStyle = '#4c1d95';
-            ctx.beginPath();
-            ctx.arc(p.x - 2.5, p.y - 1.5, 2.5, 0, Math.PI * 2);
-            ctx.arc(p.x + 2.5, p.y + 1.5, 2.5, 0, Math.PI * 2);
-            ctx.arc(p.x + 1, p.y - 2.5, 2.2, 0, Math.PI * 2);
-            ctx.fill();
-          } else if (p.category === 'casts') {
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.rotate(p.angle);
-            ctx.beginPath();
-            ctx.roundRect(-24, -8, 48, 16, 8);
-            if (p.subType === 'hyaline') {
-              ctx.fillStyle = 'rgba(226, 232, 240, 0.25)';
-              ctx.strokeStyle = 'rgba(226, 232, 240, 0.65)';
-            } else if (p.subType === 'bilirubin') {
-              ctx.fillStyle = 'rgba(217, 119, 6, 0.65)';
-              ctx.strokeStyle = '#fbbf24';
-            } else if (p.subType === 'rbc') {
-              ctx.fillStyle = 'rgba(190, 18, 60, 0.70)';
-              ctx.strokeStyle = '#fda4af';
-            } else {
-              ctx.fillStyle = 'rgba(148, 163, 184, 0.55)';
-              ctx.strokeStyle = '#cbd5e1';
+          labState.sedimentItems.forEach(item => {
+            if (item.vx) { item.x += item.vx; item.y += item.vy; }
+            if (item.type === 'rbc') {
+              ctx.beginPath(); ctx.arc(item.x, item.y, 6.5, 0, Math.PI * 2);
+              ctx.fillStyle = '#fb7185'; ctx.fill();
+            } else if (item.type === 'wbc') {
+              ctx.beginPath(); ctx.arc(item.x, item.y, 10, 0, Math.PI * 2);
+              ctx.fillStyle = '#c4b5fd'; ctx.fill();
+              ctx.fillStyle = '#4c1d95';
+              ctx.beginPath(); ctx.arc(item.x - 2, item.y, 3, 0, Math.PI * 2); ctx.arc(item.x + 2, item.y, 3, 0, Math.PI * 2); ctx.fill();
+            } else if (item.type === 'cast') {
+              ctx.save(); ctx.translate(item.x, item.y); ctx.rotate(item.angle);
+              ctx.fillStyle = item.sub === 'bilirubin' ? 'rgba(217,119,6,0.7)' : 'rgba(203,213,225,0.45)';
+              ctx.fillRect(-22, -7, 44, 14);
+              ctx.restore();
+            } else if (item.type === 'crystal') {
+              ctx.strokeStyle = item.sub === 'uric' ? '#f59e0b' : '#38bdf8';
+              ctx.lineWidth = 1.6;
+              ctx.strokeRect(item.x - 7, item.y - 7, 14, 14);
             }
-            ctx.lineWidth = 1.2;
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
-          } else if (p.subType === 'oxalate') {
-            const s = 8.5;
-            ctx.strokeStyle = '#38bdf8';
-            ctx.fillStyle = 'rgba(56, 189, 248, 0.22)';
-            ctx.lineWidth = 1.4;
-            ctx.fillRect(p.x - s, p.y - s, s * 2, s * 2);
-            ctx.strokeRect(p.x - s, p.y - s, s * 2, s * 2);
-            ctx.beginPath();
-            ctx.moveTo(p.x - s, p.y - s); ctx.lineTo(p.x + s, p.y + s);
-            ctx.moveTo(p.x + s, p.y - s); ctx.lineTo(p.x - s, p.y + s);
-            ctx.stroke();
-          } else if (p.subType === 'uric') {
-            ctx.fillStyle = 'rgba(245, 158, 11, 0.75)';
-            ctx.strokeStyle = '#fde047';
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y - 10);
-            ctx.lineTo(p.x + 7, p.y);
-            ctx.lineTo(p.x, p.y + 10);
-            ctx.lineTo(p.x - 7, p.y);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-          } else if (p.subType === 'struvite') {
-            ctx.fillStyle = 'rgba(167, 243, 208, 0.30)';
-            ctx.strokeStyle = '#34d399';
-            ctx.lineWidth = 1.3;
-            ctx.strokeRect(p.x - 11, p.y - 6, 22, 12);
-            ctx.strokeRect(p.x - 6, p.y - 3, 12, 6);
-          } else if (p.subType === 'bacteria') {
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.rotate(p.angle + Math.sin(Date.now() * 0.01) * 0.3);
-            ctx.fillStyle = '#4ade80';
-            ctx.fillRect(-4, -1.3, 8, 2.6);
-            ctx.restore();
+          });
+          ctx.filter = 'none';
+
+          // Ocular Reticle Crosshair
+          ctx.strokeStyle = 'rgba(148,163,184,0.25)';
+          ctx.beginPath(); ctx.moveTo(65, 135); ctx.lineTo(315, 135); ctx.moveTo(190, 10); ctx.lineTo(190, 260); ctx.stroke();
+          ctx.restore();
+
+          // Eyepiece Ring
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 8;
+          ctx.beginPath(); ctx.arc(190, 135, 125, 0, Math.PI * 2); ctx.stroke();
+        }
+
+        else if (labState.activeModalMode === 'refractometer') {
+          ctx.save();
+          ctx.beginPath(); ctx.arc(190, 135, 125, 0, Math.PI * 2); ctx.clip();
+
+          // White Bottom Illumination & Blue Top Shadowline proportional to SG
+          const sgNorm = (spec.sg - 1.000) / 0.040; // 0 to 1
+          const lineY = 220 - sgNorm * 165;
+
+          ctx.fillStyle = '#1d4ed8';
+          ctx.fillRect(0, 0, canvas.width, lineY);
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillRect(0, lineY, canvas.width, canvas.height - lineY);
+
+          // Vertical Specific Gravity Scale Ladder
+          ctx.strokeStyle = '#0f172a';
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 10px JetBrains Mono, monospace';
+          for (let s = 0; s <= 40; s += 5) {
+            const sy = 220 - (s / 40) * 165;
+            ctx.fillRect(165, sy, 25, 1.5);
+            ctx.fillText((1 + s / 1000).toFixed(3), 198, sy + 3);
           }
 
-          if (p === selectedSedimentItem || p === hoveredSedimentItem) {
-            ctx.globalAlpha = 1.0;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius + 5, 0, Math.PI * 2);
-            ctx.strokeStyle = p === selectedSedimentItem ? '#10b981' : '#f59e0b';
-            ctx.lineWidth = 1.8;
-            ctx.setLineDash([3, 2]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-          }
-        });
+          // Red Target Arrow at Shadowline
+          ctx.fillStyle = '#dc2626';
+          ctx.fillText(`◄ ${spec.sg.toFixed(3)}`, 105, lineY + 4);
+          ctx.restore();
 
-        ctx.restore();
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 8;
+          ctx.beginPath(); ctx.arc(190, 135, 125, 0, Math.PI * 2); ctx.stroke();
+        }
 
-        // Microscope Ocular Vignette Shadow
-        const vig = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 180, canvas.width / 2, canvas.height / 2, 400);
-        vig.addColorStop(0, 'rgba(0,0,0,0)');
-        vig.addColorStop(1, 'rgba(2,6,23,0.75)');
-        ctx.fillStyle = vig;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        else if (labState.activeModalMode === 'chart') {
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          spec.pads.forEach((p, idx) => {
+            const y = 14 + idx * 25;
+            ctx.fillStyle = interpolateHex(DRY_COLORS[idx], p.color, labState.colorDevProgress);
+            ctx.fillRect(25, y, 28, 18);
+            ctx.strokeStyle = '#ffffff';
+            ctx.strokeRect(25, y, 28, 18);
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = 'bold 11px JetBrains Mono, monospace';
+            ctx.fillText(`${p.code} (${p.name})`, 68, y + 13);
+
+            ctx.fillStyle = '#fde047';
+            ctx.fillText(labState.colorDevProgress >= 1 ? p.val : 'Incubate 60s...', 225, y + 13);
+          });
+        }
       }
-      requestAnimationFrame(animateSedimentMicroscope);
+      requestAnimationFrame(animateOcularCanvas);
     }
 
-    function setSedimentFilter(f) {
-      sedimentFilter = f;
-      ['all', 'cells', 'casts', 'crystals'].forEach(id => {
-        const btn = document.getElementById(`sed-${id}`);
-        if (id === f) btn.classList.add('active');
-        else btn.classList.remove('active');
-      });
-    }
+    // ==================== WORKSHEET & LOGBOOK TABLES ====================
+    function renderWorksheetTable() {
+      const spec = SPECIMENS[labState.specimenKey];
+      const developed = labState.colorDevProgress >= 1.0;
+      const tbody = document.getElementById('dipstick-worksheet-body');
 
-    function adjustSedimentZoom(delta) {
-      sedimentZoom = Math.min(2.0, Math.max(1.0, sedimentZoom + delta));
-      document.getElementById('sed-zoom-label').textContent = `${Math.round(sedimentZoom * 400)}x`;
-    }
-
-    function setupSedimentInteractivity() {
-      const canvas = document.getElementById('sediment-canvas');
-      const pill = document.getElementById('sediment-hover-pill');
-
-      function getCoords(e) {
-        const rect = canvas.getBoundingClientRect();
-        const rawX = ((e.clientX - rect.left) / canvas.clientWidth) * canvas.width;
-        const rawY = ((e.clientY - rect.top) / canvas.clientHeight) * canvas.height;
-        const wx = (rawX - canvas.width / 2) / sedimentZoom + canvas.width / 2;
-        const wy = (rawY - canvas.height / 2) / sedimentZoom + canvas.height / 2;
-        return { wx, wy };
-      }
-
-      canvas.addEventListener('mousemove', (e) => {
-        const { wx, wy } = getCoords(e);
-        let found = null;
-        for (let i = sedimentParticles.length - 1; i >= 0; i--) {
-          const p = sedimentParticles[i];
-          if (sedimentFilter !== 'all' && p.category !== sedimentFilter) continue;
-          if (Math.hypot(p.x - wx, p.y - wy) <= p.radius + 5) {
-            found = p;
-            break;
-          }
-        }
-        hoveredSedimentItem = found;
-        if (found) {
-          pill.classList.remove('hidden');
-          pill.textContent = `${found.id}: ${found.title}`;
-        } else {
-          pill.classList.add('hidden');
-        }
-      });
-
-      canvas.addEventListener('click', (e) => {
-        const { wx, wy } = getCoords(e);
-        let found = null;
-        for (let i = sedimentParticles.length - 1; i >= 0; i--) {
-          const p = sedimentParticles[i];
-          if (sedimentFilter !== 'all' && p.category !== sedimentFilter) continue;
-          if (Math.hypot(p.x - wx, p.y - wy) <= p.radius + 6) {
-            found = p;
-            break;
-          }
-        }
-        selectedSedimentItem = found;
-        const textEl = document.getElementById('sediment-inspector-text');
-        if (found) {
-          textEl.innerHTML = `<strong class="text-[#a4123f]">[${found.id} — ${found.title}]</strong> ${found.desc}`;
-        } else {
-          textEl.textContent = "Click directly on any cell, cast, crystal, or bacterium in the field to identify it.";
-        }
-      });
-    }
-
-    // ==================== 10-PARAMETER TABLE & CHARTS ====================
-    function renderUrinalysisTable(r) {
-      const tbody = document.getElementById('urinalysis-table-body');
-      tbody.innerHTML = r.pads.map((pad, idx) => {
-        const isAbnormal = pad.severity > 20;
-        const flagHtml = isAbnormal
-          ? `<span class="px-1.5 py-0.5 rounded bg-red-100 text-red-800 font-bold">ABNORMAL</span>`
-          : `<span class="text-emerald-600 font-semibold">NORMAL</span>`;
-
+      tbody.innerHTML = spec.pads.map((p, idx) => {
+        const col = developed ? p.color : DRY_COLORS[idx];
+        const res = developed ? p.val : "Unreacted (Complete Step 4)";
         return `
-          <tr onclick="selectBiochemicalPad(${idx})" class="pad-row cursor-pointer hover:bg-rose-50/50 transition ${idx === selectedPadIndex ? 'selected-pad' : ''}">
-            <td class="py-2 px-3 font-sans font-bold text-slate-800">#${idx + 1} ${pad.name} (${pad.code})</td>
-            <td class="py-2 px-3">
-              <span class="inline-block w-6 h-4 rounded border border-slate-400 shadow-2xs align-middle" style="background-color: ${pad.color};"></span>
-            </td>
-            <td class="py-2 px-3 font-bold text-slate-900">${pad.val}</td>
-            <td class="py-2 px-3 text-xs">${flagHtml}</td>
-            <td class="py-2 px-3 text-slate-500">${pad.ref}</td>
-            <td class="py-2 px-3 font-sans text-xs text-slate-500">${pad.principle}</td>
+          <tr>
+            <td class="p-2 font-bold text-slate-600">#${idx + 1}</td>
+            <td class="p-2 font-sans font-semibold text-slate-800">${p.name} (${p.code})</td>
+            <td class="p-2"><span class="inline-block w-6 h-4 rounded border border-slate-400 align-middle" style="background:${col}"></span></td>
+            <td class="p-2 font-bold ${developed ? 'text-slate-900' : 'text-slate-400'}">${res}</td>
+            <td class="p-2 text-slate-500">${p.ref}</td>
           </tr>
         `;
       }).join('');
     }
 
-    function renderBiochemicalPlots(r) {
-      const xCodes = r.pads.map(p => p.code);
-      const ySev = r.pads.map(p => p.severity);
-      const colors = r.pads.map(p => p.color);
-
-      const barTrace = [{
-        x: xCodes,
-        y: ySev,
-        type: 'bar',
-        marker: {
-          color: colors,
-          line: { color: '#334155', width: 1.5 }
-        },
-        hovertemplate: '<b>Pad: %{x}</b><br>Chromogen Signal: %{y:.0f}%<extra></extra>'
-      }];
-
-      const barLayout = {
-        margin: { t: 15, r: 15, b: 35, l: 42 },
-        xaxis: { title: 'Reagent Strip Pads' },
-        yaxis: { title: 'Chromogen Signal (%)', range: [0, 105] },
-        shapes: [{
-          type: 'line', x0: -0.5, x1: 9.5, y0: 20, y1: 20,
-          line: { color: '#059669', width: 1.5, dash: 'dot' }
-        }]
-      };
-
-      Plotly.react('biochem-bar-plot', barTrace, barLayout, { displaylogo: false, responsive: true });
-
-      const barEl = document.getElementById('biochem-bar-plot');
-      if (barEl.removeAllListeners) barEl.removeAllListeners('plotly_click');
-      barEl.on('plotly_click', (data) => {
-        const idx = data.points[0].pointNumber;
-        selectBiochemicalPad(idx);
-        const pad = r.pads[idx];
-        document.getElementById('biochem-plot-insight').innerHTML = 
-          `<strong>${pad.name} (${pad.code}):</strong> ${pad.val} | ${pad.principle}`;
+    function autoLogCompletedAssay() {
+      const spec = SPECIMENS[labState.specimenKey];
+      labState.logbook.unshift({
+        time: new Date().toLocaleTimeString(),
+        code: spec.code,
+        name: spec.name,
+        sg: spec.sg.toFixed(3),
+        ph: spec.ph.toFixed(1),
+        glu: spec.pads[9].val,
+        pro: spec.pads[3].val,
+        ket: spec.pads[7].val,
+        micro: spec.microscopyText,
+        diagnosis: spec.diagnosis
       });
 
-      const phaseTraces = [
-        {
-          x: [4.8, 5.2, 5.5], y: [1.022, 1.028, 1.032],
-          mode: 'markers', name: 'Uric Acid (Acidic)',
-          marker: { size: 10, color: '#f59e0b', symbol: 'diamond' }
-        },
-        {
-          x: [5.5, 6.0, 6.5], y: [1.015, 1.020, 1.026],
-          mode: 'markers', name: 'Ca Oxalate',
-          marker: { size: 10, color: '#38bdf8', symbol: 'square' }
-        },
-        {
-          x: [7.4, 7.8, 8.5], y: [1.018, 1.022, 1.025],
-          mode: 'markers', name: 'Struvite (Alkaline)',
-          marker: { size: 10, color: '#10b981', symbol: 'hexagon' }
-        },
-        {
-          x: [r.ph], y: [r.corrSG],
-          mode: 'markers+text',
-          name: 'Specimen',
-          text: [r.idCode],
-          textposition: 'top center',
-          marker: { size: 14, color: '#a4123f', symbol: 'star', line: { color: '#ffffff', width: 1.5 } }
-        }
-      ];
-
-      const phaseLayout = {
-        margin: { t: 18, r: 15, b: 35, l: 50 },
-        xaxis: { title: 'Urine pH', range: [4.2, 9.2] },
-        yaxis: { title: 'Specific Gravity (SG)', range: [1.002, 1.036] },
-        legend: { orientation: 'h', y: 1.18, font: { size: 9 } },
-        hovermode: 'closest'
-      };
-
-      Plotly.react('ph-sg-plot', phaseTraces, phaseLayout, { displaylogo: false, responsive: true });
+      const tbody = document.getElementById('logbook-tbody');
+      tbody.innerHTML = labState.logbook.map((r, i) => `
+        <tr class="${i === 0 ? 'bg-rose-50 font-semibold' : ''}">
+          <td class="p-1.5 text-[#a4123f] font-bold">#${labState.logbook.length - i}</td>
+          <td class="p-1.5 font-sans">${r.name}</td>
+          <td class="p-1.5">${r.sg}</td>
+          <td class="p-1.5">${r.ph}</td>
+          <td class="p-1.5">${r.glu.split(' ')[0]}</td>
+          <td class="p-1.5">${r.pro.split(' ')[0]}</td>
+          <td class="p-1.5">${r.ket.split(' ')[0]}</td>
+          <td class="p-1.5 font-sans truncate max-w-[120px]" title="${r.micro}">${r.micro}</td>
+        </tr>
+      `).join('');
+      document.getElementById('log-counter').textContent = `${labState.logbook.length} Logged`;
     }
 
-    // ==================== STEP 4: AUTO-LOG & REFRACTOMETER VERIFICATION ====================
-    function autoRecordToLog(r) {
-      observationLog.unshift({ ...r });
-      const tbody = document.getElementById('observation-log-body');
-      tbody.innerHTML = observationLog.map((item, idx) => {
-        const runNum = observationLog.length - idx;
-        return `
-          <tr class="${idx === 0 ? 'bg-rose-50/60 font-semibold' : ''}">
-            <td class="p-2 font-bold text-[#a4123f]">#${runNum}</td>
-            <td class="p-2 font-sans font-medium text-slate-800">${item.sampleName}</td>
-            <td class="p-2 font-sans">${item.colorName}</td>
-            <td class="p-2">${item.corrSG.toFixed(3)}</td>
-            <td class="p-2">${item.ph.toFixed(1)}</td>
-            <td class="p-2">${item.glucose.label.split(' ')[0]}</td>
-            <td class="p-2">${item.protein.label.split(' ')[0]}</td>
-            <td class="p-2">${item.ketones.label.split(' ')[0]}</td>
-            <td class="p-2">${item.nitrite.pos ? 'POS' : 'NEG'} / ${item.leukocytes.label.split(' ')[0]}</td>
-          </tr>
-        `;
-      }).join('');
-      document.getElementById('log-count-badge').textContent = 
-        `${observationLog.length} ${observationLog.length === 1 ? 'Entry' : 'Entries'} Logged`;
-    }
-
-    function verifyUrinalysisCalc() {
-      const userSG = parseFloat(document.getElementById('calc-sg').value);
-      const userOsm = parseFloat(document.getElementById('calc-osm').value);
-      const box = document.getElementById('calc-feedback');
-      box.classList.remove('hidden');
-
-      if (isNaN(userSG) || isNaN(userOsm)) {
-        box.textContent = "Please enter values for both Corrected SG and Estimated Osmolality.";
-        box.className = "text-xs font-medium p-2.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200";
-        return;
+    function downloadCSV() {
+      if (labState.logbook.length === 0) {
+        autoLogCompletedAssay();
       }
-
-      const expectedSG = currentComputedResult.corrSG;
-      const expectedOsm = Math.round((expectedSG - 1.000) * 1000 * 35);
-
-      if (Math.abs(userSG - expectedSG) <= 0.0015 && Math.abs(userOsm - expectedOsm) <= 50) {
-        box.innerHTML = `&check; Correct! Corrected SG = <strong>${expectedSG.toFixed(3)}</strong> and Estimated Osmolality &approx; <strong>${expectedOsm} mOsm/kg</strong>.`;
-        box.className = "text-xs font-medium p-2.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200";
-        advanceProcedureStep(5);
-      } else {
-        box.innerHTML = `Formula check: SG_corr = ${currentComputedResult.rawSG.toFixed(3)} + ((${currentComputedResult.temp} - 20)/3)&times;0.001 = <strong>${expectedSG.toFixed(3)}</strong>; Osmolality &approx; (${Math.round((expectedSG - 1)*1000)} &times; 35) = <strong>${expectedOsm} mOsm/kg</strong>.`;
-        box.className = "text-xs font-medium p-2.5 rounded-lg bg-red-50 text-red-800 border border-red-200";
-      }
-    }
-
-    function autoFillUrinalysisCalc() {
-      if (!currentComputedResult) return;
-      const expectedSG = currentComputedResult.corrSG;
-      const expectedOsm = Math.round((expectedSG - 1.000) * 1000 * 35);
-      document.getElementById('calc-sg').value = expectedSG.toFixed(3);
-      document.getElementById('calc-osm').value = expectedOsm;
-      verifyUrinalysisCalc();
-    }
-
-    // ==================== CSV & CLINICAL REPORT EXPORTS ====================
-    function downloadResultsCSV() {
-      if (observationLog.length === 0) {
-        autoRecordToLog(currentComputedResult);
-      }
-      const headers = [
-        "Run_No", "Time", "Specimen_ID", "Specimen_Profile", "Colour", "Clarity", "Raw_SG", "Corrected_SG",
-        "pH", "Glucose", "Protein", "Ketones", "Bilirubin", "Urobilinogen", "Blood",
-        "Nitrite", "Leukocytes", "Temp_C", "Incubation_Sec", "Preservation", "Clinical_Impression"
-      ];
-      const rows = observationLog.slice().reverse().map((r, i) => [
-        i + 1, `"${r.timestamp}"`, `"${r.idCode}"`, `"${r.sampleName}"`, `"${r.colorName}"`, `"${r.clarityName}"`,
-        r.rawSG.toFixed(3), r.corrSG.toFixed(3), r.ph.toFixed(1),
-        `"${r.glucose.label}"`, `"${r.protein.label}"`, `"${r.ketones.label}"`,
-        `"${r.bilirubin.label}"`, `"${r.urobilinogen.label}"`, `"${r.blood.label}"`,
-        `"${r.nitrite.label}"`, `"${r.leukocytes.label}"`,
-        r.temp, r.readTime, `"${r.storage}"`, `"${r.impression}"`
+      const headers = ["Run", "Time", "Code", "Specimen", "SG", "pH", "Glucose", "Protein", "Ketones", "Diagnosis"];
+      const rows = labState.logbook.slice().reverse().map((r, i) => [
+        i + 1, `"${r.time}"`, `"${r.code}"`, `"${r.name}"`, r.sg, r.ph, `"${r.glu}"`, `"${r.pro}"`, `"${r.ket}"`, `"${r.diagnosis}"`
       ]);
-      const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
+      const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const a = document.createElement("a");
-      a.href = url;
+      a.href = URL.createObjectURL(blob);
       a.download = `Urinalysis_Lab_Log_${new Date().toISOString().slice(0,10)}.csv`;
-      document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     }
 
-    function downloadCurrentReportTXT() {
-      if (!currentComputedResult) return;
-      const r = currentComputedResult;
-      const lines = [
+    function downloadReportTXT() {
+      const spec = SPECIMENS[labState.specimenKey];
+      const txt = [
         "====================================================================",
-        "         CLINICAL URINALYSIS & BIOCHEMISTRY LABORATORY REPORT       ",
+        "         URINE ANALYSIS & CLINICAL BIOCHEMISTRY LAB REPORT          ",
         "====================================================================",
-        `Timestamp             : ${r.timestamp}`,
-        `Specimen ID           : ${r.idCode} (${r.sampleName})`,
-        `Physical Macroscopy   : ${r.colorName} | ${r.clarityName}`,
-        `Refractometer SG      : Raw = ${r.rawSG.toFixed(3)} | Corrected (${r.temp}C) = ${r.corrSG.toFixed(3)}`,
-        `Microscopic Sediment  : ${r.sedimentTag}`,
-        `Clinical Impression   : ${r.impression}`,
-        `Quality Control Notes : ${r.flags}`,
+        `Specimen Code  : ${spec.code} (${spec.name})`,
+        `Appearance     : ${spec.colorLabel}`,
+        `Specific Grav. : ${spec.sg.toFixed(3)}`,
+        `Microscopy     : ${spec.microscopyText}`,
+        `Diagnosis      : ${spec.diagnosis}`,
         "--------------------------------------------------------------------",
-        "PAD #   ANALYTE                    RESULT                     REF INTERVAL",
-        "--------------------------------------------------------------------",
-        ...r.pads.map((p, idx) => `#${String(idx + 1).padEnd(6)} ${p.name.padEnd(26)} ${p.val.padEnd(26)} ${p.ref}`),
+        ...spec.pads.map((p, i) => `#${i + 1} ${p.name.padEnd(20)} : ${p.val.padEnd(22)} (Ref: ${p.ref})`),
         "===================================================================="
       ].join("\n");
-
-      const blob = new Blob([lines], { type: "text/plain;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
+      const blob = new Blob([txt], { type: "text/plain;charset=utf-8;" });
       const a = document.createElement("a");
-      a.href = url;
-      a.download = `Urinalysis_Report_${r.idCode}.txt`;
-      document.body.appendChild(a);
+      a.href = URL.createObjectURL(blob);
+      a.download = `Urinalysis_Report_${spec.code}.txt`;
       a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     }
 
-    // Initialize Bench on Load at Step 1
     window.addEventListener('DOMContentLoaded', () => {
-      const key = document.getElementById('sample-select').value;
-      document.getElementById('sample-clinical-note').textContent = URINE_SAMPLES[key].clinicalNote;
-      setupSedimentInteractivity();
-      resetDipstickToStandby();
-      runUrinalysisEngine(false);
-      advanceProcedureStep(1);
-      requestAnimationFrame(animateDipstickBench);
-      requestAnimationFrame(animateSedimentMicroscope);
+      updateBannerUI();
+      requestAnimationFrame(renderLabBench);
+      requestAnimationFrame(animateOcularCanvas);
     });
   </script>
 </body>
