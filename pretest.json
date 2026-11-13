@@ -1,0 +1,107 @@
+
+{
+  "version": 2.0,
+  "questions": [
+    {
+      "question": "1.The primary organ responsible for urine production:",
+      "answers": {
+        "a": "Lungs",
+        "b": "Liver",
+        "c": "Heart",
+        "d": "Kidneys"
+      },
+ 
+      "correctAnswer": "d",
+      "difficulty": "beginner"
+    },   
+
+
+     {
+      "question": "2. Proteinuria refers to :",
+      "answers": {
+        "a": "Presence of bilirubin in urine",
+        "b": "Presence of blood in urine",
+        "c": "Presence of protein in urine",
+        "d": "Presence of glucose in urine"
+      },
+      
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+
+
+    
+    {
+      "question": "3. Blood in urine means:",
+      "answers": {
+        "a": "Glycosuria",
+        "b": "Proteinuria",
+        "c": "Hematuria",
+        "d": "Ketonuria"
+      },
+      
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+
+
+ 
+    {
+      "question": "4. The major waste product found in urine :",
+      "answers": {
+        "a": "Hemoglobin",
+        "b": "Glucose",
+        "c": "Bilirubin",
+        "d": "Urea"
+      },
+      
+      "correctAnswer": "d",
+      "difficulty": "beginner"
+    },
+
+ 
+ 
+    {
+      "question": "5. Urine dipstick method is :",
+      "answers": {
+        "a": "Qualitative test",
+        "b": "Quantitative test",
+        "c": "Semi-quantitative test",
+        "d": "Semi-quantitative test"
+      },
+      
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+
+  
+ 
+    {
+      "question": "6. Normal pH of urine :",
+      "answers": {
+        "a": "3 – 7",
+        "b": "6- 7.5",
+        "c": "7 - 9",
+        "d": "4.5 - 8"
+      },
+      
+      "correctAnswer": "d",
+      "difficulty": "beginner"
+    },
+
+   
+ 
+    {
+      "question": "7. Which of the following can be observed under a microscopic examination of urine sample ?",
+      "answers": {
+        "a": "RBCs and WBCs",
+        "b": "Glucose",
+        "c": "Protein",
+        "d": "Bilirubin"
+      },
+      
+      "correctAnswer": "a",
+      "difficulty": "beginner"
+    }
+  ]
+}
