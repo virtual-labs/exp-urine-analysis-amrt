@@ -1,38 +1,121 @@
+
 {
   "version": 2.0,
   "questions": [
     {
-      "question": "This is a Sample Question 1?",
+      "question": "1. Which of the following methods is used for routine urine analysis in a clinical setting ?",
       "answers": {
-        "a": "answer1",
-        "b": "answer2",
-        "c": "answer3",
-        "d": "answer4"
+        "a": "Gram staining",
+        "b": "Urine dipstick ",
+        "c": "Ultrasound scan",
+        "d": "All of the above"
       },
-      "explanations": {
-        "a": "Explanation 1  <a href='www.google.com'>here</a>",
-        "b": "Explanation 2",
-        "c": "Explanation 2",
-        "d": "Explanation 2"
+ 
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },   
+
+
+     {
+      "question": "2. Normal colour of urine :",
+      "answers": {
+        "a": "Pale yellow",
+        "b": "Pale pink",
+        "c": "Dark yellow",
+        "d": "Brown"
       },
+      
       "correctAnswer": "a",
       "difficulty": "beginner"
     },
+
+
+    
     {
-      "question": "This is a Sample Question 2?",
+      "question": "3. Normal specific gravity of urine : ",
       "answers": {
-        "a": "answer1",
-        "b": "answer2",
-        "c": "answer3",
-        "d": "answer4"
+        "a": "1.005 – 1.030",
+        "b": "0.50 - 0.55",
+        "c": "2.5 - 3.4",
+        "d": "0.25 - 3.5"
       },
-      "explanations": {
-        "a": "Explanation 1  <a href='www.google.com'>here</a>",
-        "b": "Explanation 2",
-        "c": "Explanation 2",
-        "d": "Explanation 2"
+      
+      "correctAnswer": "a",
+      "difficulty": "beginner"
+    },
+
+
+ 
+    {
+      "question": "4. In which of the following diseases is the glycosuria condition reported ?",
+      "answers": {
+        "a": "UTI",
+        "b": "Dehydration",
+        "c": "Diabetes mellitus",
+        "d": "Kidney stones"
       },
+      
       "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+
+
+    
+    {
+      "question": "5. Which of the following components of urine can be observed under microscopic view ?",
+      "answers": {
+        "a": "RBCs",
+        "b": "Pus cells",
+        "c": "Hyaline Casts",
+        "d": "All the above"
+      },
+      
+      "correctAnswer": "d",
+      "difficulty": "beginner"
+    },
+
+
+
+    {
+      "question": "6. Diabetic ketoacidosis refers to :",
+      "answers": {
+        "a": "Production of acids in the body",
+        "b": "Production of aldehydes in the body",
+        "c": "Production of ketones in the body",
+        "d": "Production of glucose in the body"
+      },
+      
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+
+
+
+    {
+      "question": "7. Which of the following can be viewed under the high-power field of a microscope ?",
+      "answers": {
+        "a": "Granular cast",
+        "b": "Waxy cast",
+        "c": "Pus cells",
+        "d": "Hyaline Casts"
+      },
+      
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+
+
+
+    {
+      "question": "8. Hematuria is a common condition in :",
+      "answers": {
+        "a": "UTIs",
+        "b": "Kidney stones",
+        "c": "Glomerulonephritis",
+        "d": "All of the above"
+      },
+     
+      "correctAnswer": "d",
       "difficulty": "beginner"
     }
   ]
